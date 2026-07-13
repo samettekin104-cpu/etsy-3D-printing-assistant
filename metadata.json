@@ -1,0 +1,6 @@
+{
+  "name": "Etsy 3D Printing Product Researcher",
+  "description": "AI-powered product discovery, validation, and optimization platform for 3D printable Etsy products.",
+  "requestFramePermissions": [],
+  "majorCapabilities": ["MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"]
+}
