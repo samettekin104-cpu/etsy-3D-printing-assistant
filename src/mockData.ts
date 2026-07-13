@@ -219,6 +219,26 @@ export const PREDEFINED_PRODUCTS: Etsy3DProductAnalysis[] = [
       copyrightPatentCheck: "Public domain creative commons design built from scratch. Open source or self-designed models have zero legal risk on Etsy.",
       warnings: "Ensure you do not reference headphone brand logos in the titles. For example, do NOT write 'Stand for Apple AirPods Max'. Use 'Stand Compatible with AirPods Max' to adhere to trademark fair use guidelines.",
       isSafeToSell: true
+    },
+    customerSentiment: {
+      commonPainPoints: [
+        { painPoint: "Too lightweight & topples over", frequencyPercent: 65, impactLevel: "High", description: "Since it is printed in hollow plastic, placing heavy headsets causes it to wobble or tip over when bumped." },
+        { painPoint: "Sharp layer edges scratching headband", frequencyPercent: 28, impactLevel: "Medium", description: "Some users noted that the top curves of the plastic trellis have layer ridges that can scuff soft leather headbands." },
+        { painPoint: "Stressful snap assembly fit", frequencyPercent: 15, impactLevel: "Low", description: "A few customers found it difficult to snap the column into the base slot without feeling like the plastic might crack." }
+      ],
+      topCompetitorReviews: [
+        { rating: 3, reviewText: "I love the honeycomb design but it is so light that every time I grab my headphones, the whole stand slides or falls over. Had to glue a metal plate to the bottom.", competitorName: "Retro3DStudios", keyIssue: "Lacks stability / too light"
+        },
+        { rating: 2, reviewText: "The ridges on the top piece are sharp. It scratched the leather headband of my Sennheiser HD600s within a week. I had to sand it down.", competitorName: "DeskForge", keyIssue: "Rough surface finish / headband wear"
+        },
+        { rating: 4, reviewText: "Looks gorgeous on stream! Assembly was a bit stressful because the fit was so tight I thought I would break the plastic tabs when sliding it in.", competitorName: "ApexPrint3D", keyIssue: "Overly tight tolerances"
+        }
+      ],
+      improvementSuggestions: [
+        { feature: "Weighted Bottom Chamber", priority: "High", designAction: "Create a hollow compartment inside the base plate to fill with standard steel fishing weights or heavy metal washers during printing." },
+        { feature: "Smooth Headband Cradle", priority: "Medium", designAction: "Apply an elegant chamfer or round-over to the top hanger surface, or design a slide-on soft TPU cushion insert." },
+        { feature: "Optimized Dovetail Joint", priority: "Low", designAction: "Reduce the snap-fit overhang friction overlap from 1.2mm to 0.8mm to make sliding into place satisfying and stress-free." }
+      ]
     }
   },
   {
@@ -426,6 +446,23 @@ export const PREDEFINED_PRODUCTS: Etsy3DProductAnalysis[] = [
       copyrightPatentCheck: "100% proprietary design elements. No risk of copyright claims.",
       warnings: "None. Highly safe, zero risk product.",
       isSafeToSell: true
+    },
+    customerSentiment: {
+      commonPainPoints: [
+        { painPoint: "Water weeping & layer leaks", frequencyPercent: 42, impactLevel: "High", description: "Inadequately melted layers result in slow micro-weeping, leaving white mineral ring stains on wooden furniture." },
+        { painPoint: "Root rot from stagnant water", frequencyPercent: 30, impactLevel: "High", description: "Lack of air ventilation in the soil chamber causes roots to rot because they sit directly in constant moisture without breathing." },
+        { painPoint: "Difficult to lift & refill", frequencyPercent: 20, impactLevel: "Medium", description: "The planter body fits so tightly inside the reservoir cup that lifting it to refill water often causes soil to spill out." }
+      ],
+      topCompetitorReviews: [
+        { rating: 2, reviewText: "After 3 weeks, I noticed a water stain on my oak console table! The pot has a slow leak through the bottom layers. Definitely not 100% waterproof.", competitorName: "EcoGreens3D", keyIssue: "Water weeping / slow layer leakage" },
+        { rating: 3, reviewText: "My succulent died from root rot. The water doesn't drain well and there is zero air circulation inside the reservoir. Soil stays soggy constantly.", competitorName: "PrusaPlanters", keyIssue: "Poor aeration / soggy soil" },
+        { rating: 4, reviewText: "It looks beautiful, but refilling it is a pain. There is no grip or slot, so you have to pinch the muddy edge of the planter to lift it out of the base.", competitorName: "Terra3D", keyIssue: "Hard to refill / lacks lift indicators" }
+      ],
+      improvementSuggestions: [
+        { feature: "Aeration Slots & Standoffs", priority: "High", designAction: "Incorporate horizontal air vents on the upper rim of the water reservoir to decouple root soil from the direct water line, encouraging air pruning." },
+        { feature: "Watertight Inner Wall Seal", priority: "High", designAction: "Increase standard perimeter walls to 4 layers and recommend a slightly elevated printing temperature (+10°C) to ensure tight layer fusion." },
+        { feature: "Finger Recesses & Grip Flange", priority: "Medium", designAction: "Add two subtle semi-circular finger recesses on opposite sides of the reservoir tray so users can lift the inner pot easily." }
+      ]
     }
   }
 ];

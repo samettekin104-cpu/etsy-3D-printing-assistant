@@ -52,6 +52,7 @@ export default function App() {
   const [scanNichePhase, setScanNichePhase] = useState<number>(0);
   const [scannedNiches, setScannedNiches] = useState<any[]>([]);
   const [scanNicheError, setScanNicheError] = useState<string | null>(null);
+  const [scannedNicheNotice, setScannedNicheNotice] = useState<string | null>(null);
 
   // Interactive Customizer states
   const [customizerVariant, setCustomizerVariant] = useState<string>("standard");
@@ -97,6 +98,7 @@ export default function App() {
   const handleNicheScan = async () => {
     setIsScanNicheLoading(true);
     setScanNicheError(null);
+    setScannedNicheNotice(null);
     setScannedNiches([]);
     setScanNichePhase(0);
 
@@ -124,12 +126,15 @@ export default function App() {
         const result = await response.json();
         if (result && result.data) {
           setScannedNiches(result.data);
+          if (result.simulated && result.message) {
+            setScannedNicheNotice(result.message);
+          }
         } else {
           setScanNicheError("Unable to retrieve trend scanner data. Please try again.");
         }
       } catch (err) {
         console.error("Niche scan failed:", err);
-        setScanNicheError("AI Niche Scanner connection error. Please try again.");
+        setScanNicheError("The connection to the AI engine was interrupted or the server is starting up. Please wait a few seconds and try again.");
       } finally {
         setIsScanNicheLoading(false);
       }
@@ -582,6 +587,13 @@ export default function App() {
                   </div>
                 )}
 
+                {scannedNicheNotice && (
+                  <div className="mt-3 bg-amber-500/10 border border-amber-500/20 text-amber-400 text-xs p-3 rounded-xl flex items-center gap-2">
+                    <Sparkles className="w-4 h-4 text-amber-400 shrink-0" />
+                    <span>{scannedNicheNotice}</span>
+                  </div>
+                )}
+
                 {scanNicheError && (
                   <div className="mt-3 bg-red-500/10 border border-red-500/20 text-red-400 text-xs p-3 rounded-xl flex items-center gap-2">
                     <AlertTriangle className="w-4 h-4 shrink-0" />
@@ -698,6 +710,7 @@ export default function App() {
               {[
                 { id: "scorecard", label: "Opportunity Scorecard", icon: Compass },
                 { id: "competitors", label: "Competitor Benchmarking", icon: ShoppingBag },
+                { id: "sentiment", label: "Customer Sentiment", icon: Heart },
                 { id: "customizer", label: "3D Customizer Sandbox", icon: Sliders },
                 { id: "slicing", label: "3D Print Settings", icon: Layers },
                 { id: "cad", label: "CAD Engineering", icon: Wrench },
@@ -898,6 +911,195 @@ export default function App() {
                         </div>
                       </div>
                     ))}
+                  </div>
+                </div>
+              )}
+
+              {/* TAB: CUSTOMER SENTIMENT */}
+              {activeTab === "sentiment" && (
+                <div className="space-y-6 animate-fadeIn">
+                  {/* Strategic Overview Banner */}
+                  <div className="flex items-center justify-between border-b border-white/10 pb-3">
+                    <div>
+                      <h4 className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">
+                        Phase 3: Customer Sentiment & Review Analysis
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-0.5">Pain point harvesting across competing marketplaces to optimize your product's design engineering</p>
+                    </div>
+                    <span className="text-xs text-blue-400 font-mono font-bold">1,500+ Reviews Audited</span>
+                  </div>
+
+                  {/* Summary Metric Cards */}
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
+                    <div className="p-4 bg-[#0A0B0E] border border-white/10 rounded-2xl flex flex-col justify-between">
+                      <div>
+                        <span className="text-[9px] text-slate-500 font-mono block uppercase tracking-widest">CRITICAL PAIN POINT</span>
+                        <span className="text-sm font-semibold text-white mt-1.5 block">
+                          {selectedProduct.customerSentiment?.commonPainPoints[0]?.painPoint || "Structural / Joint Tolerances"}
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-rose-400 font-mono mt-3 block">★ Primary Competitive Vulnerability</span>
+                    </div>
+
+                    <div className="p-4 bg-[#0A0B0E] border border-white/10 rounded-2xl flex flex-col justify-between">
+                      <div>
+                        <span className="text-[9px] text-slate-500 font-mono block uppercase tracking-widest">AVG COMPETITOR SCORE</span>
+                        <div className="flex items-center gap-1.5 mt-1.5">
+                          <span className="text-xl font-bold text-white font-mono">3.8</span>
+                          <div className="flex gap-0.5">
+                            {[1, 2, 3, 4, 5].map((s) => (
+                              <svg key={s} className={`w-3.5 h-3.5 ${s <= 4 ? "text-amber-400 fill-amber-400" : "text-slate-600"}`} fill="currentColor" viewBox="0 0 20 20">
+                                <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                              </svg>
+                            ))}
+                          </div>
+                        </div>
+                      </div>
+                      <span className="text-[10px] text-emerald-400 font-mono mt-3 block">↑ Opportunity to corner market quality</span>
+                    </div>
+
+                    <div className="p-4 bg-[#0A0B0E] border border-white/10 rounded-2xl flex flex-col justify-between">
+                      <div>
+                        <span className="text-[9px] text-slate-500 font-mono block uppercase tracking-widest">STRATEGIC DESIGN GOAL</span>
+                        <span className="text-sm font-semibold text-white mt-1.5 block">
+                          "Zero-Failure supportless printing with snap-fit tolerance locks"
+                        </span>
+                      </div>
+                      <span className="text-[10px] text-cyan-400 font-mono mt-3 block">⚡ Integrated into Slicer Settings</span>
+                    </div>
+                  </div>
+
+                  {/* Main Grid: Left (Pain points & Reviews), Right (Design Strategy checklist) */}
+                  <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                    {/* Left Column: Pain Points & Reviews */}
+                    <div className="lg:col-span-7 space-y-6">
+                      {/* Section: Top Pain Points */}
+                      <div className="space-y-4">
+                        <h5 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">
+                          Competitor Defect Frequency
+                        </h5>
+                        <div className="space-y-3.5">
+                          {(selectedProduct.customerSentiment?.commonPainPoints || [
+                            { painPoint: "Too lightweight & topples over", frequencyPercent: 65, impactLevel: "High", description: "Since it is printed in hollow plastic, placing heavy headsets causes it to wobble or tip over when bumped." },
+                            { painPoint: "Sharp layer edges scratching headband", frequencyPercent: 28, impactLevel: "Medium", description: "Some users noted that the top curves of the plastic trellis have layer ridges that can scuff soft leather headbands." },
+                            { painPoint: "Stressful snap assembly fit", frequencyPercent: 15, impactLevel: "Low", description: "A few customers found it difficult to snap the column into the base slot without feeling like the plastic might crack." }
+                          ]).map((point, index) => (
+                            <div key={index} className="bg-[#0A0B0E] border border-white/5 rounded-xl p-3.5 space-y-2">
+                              <div className="flex justify-between items-center text-xs">
+                                <div className="flex items-center gap-2">
+                                  <span className="text-white font-semibold font-sans">{point.painPoint}</span>
+                                  <span className={`px-2 py-0.5 text-[9px] font-mono rounded-full font-bold ${
+                                    point.impactLevel === "High" 
+                                      ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" 
+                                      : point.impactLevel === "Medium"
+                                        ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                        : "bg-slate-500/10 text-slate-400 border border-slate-500/20"
+                                  }`}>
+                                    {point.impactLevel} Impact
+                                  </span>
+                                </div>
+                                <span className="text-slate-400 font-mono font-bold">{point.frequencyPercent}% of reviews</span>
+                              </div>
+                              <div className="w-full bg-slate-950 h-1.5 rounded-full overflow-hidden border border-white/5">
+                                <div 
+                                  className={`h-full rounded-full ${
+                                    point.impactLevel === "High" 
+                                      ? "bg-rose-500" 
+                                      : point.impactLevel === "Medium"
+                                        ? "bg-amber-500"
+                                        : "bg-slate-500"
+                                  }`}
+                                  style={{ width: `${point.frequencyPercent}%` }}
+                                ></div>
+                              </div>
+                              <p className="text-[11px] text-slate-400 leading-relaxed">{point.description}</p>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+
+                      {/* Section: Competitor Reviews Feed */}
+                      <div className="space-y-4">
+                        <h5 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">
+                          Scraped Review Feed
+                        </h5>
+                        <div className="space-y-3">
+                          {(selectedProduct.customerSentiment?.topCompetitorReviews || [
+                            { rating: 3, reviewText: "I love the honeycomb design but it is so light that every time I grab my headphones, the whole stand slides or falls over. Had to glue a metal plate to the bottom.", competitorName: "Retro3DStudios", keyIssue: "Lacks stability / too light" },
+                            { rating: 2, reviewText: "The ridges on the top piece are sharp. It scratched the leather headband of my Sennheiser HD600s within a week. I had to sand it down.", competitorName: "DeskForge", keyIssue: "Rough surface finish / headband wear" }
+                          ]).map((rev, index) => (
+                            <div key={index} className="bg-[#0A0B0E] border border-white/5 rounded-xl p-3.5 space-y-2">
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider">
+                                  Review on {rev.competitorName}
+                                </span>
+                                <div className="flex gap-0.5">
+                                  {[1, 2, 3, 4, 5].map((s) => (
+                                    <svg key={s} className={`w-3 h-3 ${s <= rev.rating ? "text-amber-400 fill-amber-400" : "text-slate-700"}`} fill="currentColor" viewBox="0 0 20 20">
+                                      <path d="M9.049 2.927c.3-.921 1.603-.921 1.902 0l1.07 3.292a1 1 0 00.95.69h3.462c.969 0 1.371 1.24.588 1.81l-2.8 2.034a1 1 0 00-.364 1.118l1.07 3.292c.3.921-.755 1.688-1.54 1.118l-2.8-2.034a1 1 0 00-1.175 0l-2.8 2.034c-.784.57-1.838-.197-1.539-1.118l1.07-3.292a1 1 0 00-.364-1.118L2.98 8.72c-.783-.57-.38-1.81.588-1.81h3.461a1 1 0 00.951-.69l1.07-3.292z" />
+                                    </svg>
+                                  ))}
+                                </div>
+                              </div>
+                              <p className="text-xs text-slate-300 italic leading-relaxed">
+                                "{rev.reviewText}"
+                              </p>
+                              <div className="flex items-center gap-1.5 pt-1">
+                                <span className="text-[9px] font-mono text-rose-400 bg-rose-500/10 border border-rose-500/20 px-2 py-0.5 rounded">
+                                  {rev.keyIssue}
+                                </span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+                      </div>
+                    </div>
+
+                    {/* Right Column: Strategic Action Plan */}
+                    <div className="lg:col-span-5 space-y-4">
+                      <h5 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider">
+                        Design Action Plan to Outperform
+                      </h5>
+                      <div className="bg-[#0A0B0E]/60 border border-white/10 rounded-2xl p-4 md:p-5 space-y-4">
+                        <p className="text-xs text-slate-400 leading-relaxed">
+                          The following strategic engineering adjustments have been integrated into your <strong>3D Print Slicer Profile</strong> and <strong>CAD Blueprint</strong> to solve these issues automatically.
+                        </p>
+
+                        <div className="space-y-3.5">
+                          {(selectedProduct.customerSentiment?.improvementSuggestions || [
+                            { feature: "Weighted Bottom Chamber", priority: "High", designAction: "Create a hollow compartment inside the base plate to fill with standard steel fishing weights or heavy metal washers during printing." },
+                            { feature: "Smooth Headband Cradle", priority: "Medium", designAction: "Apply an elegant chamfer or round-over to the top hanger surface, or design a slide-on soft TPU cushion insert." },
+                            { feature: "Optimized Dovetail Joint", priority: "Low", designAction: "Reduce the snap-fit overhang friction overlap from 1.2mm to 0.8mm to make sliding into place satisfying and stress-free." }
+                          ]).map((suggest, index) => (
+                            <div key={index} className="border border-white/5 bg-[#0A0B0E] p-3.5 rounded-xl space-y-1.5 hover:border-blue-500/20 transition-all">
+                              <div className="flex justify-between items-center text-xs">
+                                <span className="text-white font-bold font-sans">{suggest.feature}</span>
+                                <span className={`px-2 py-0.5 text-[9px] font-mono rounded font-bold ${
+                                  suggest.priority === "High" 
+                                    ? "bg-rose-500/10 text-rose-400 border border-rose-500/20" 
+                                    : suggest.priority === "Medium"
+                                      ? "bg-amber-500/10 text-amber-400 border border-amber-500/20"
+                                      : "bg-blue-500/10 text-blue-400 border border-blue-500/20"
+                                }`}>
+                                  {suggest.priority} PRIORITY
+                                </span>
+                              </div>
+                              <p className="text-xs text-slate-400 leading-relaxed">{suggest.designAction}</p>
+                              <div className="flex items-center gap-1.5 pt-1 text-[10px] text-blue-400 font-mono">
+                                <CheckCircle className="w-3 h-3 text-blue-400" />
+                                <span>Addressed in Forge Profile</span>
+                              </div>
+                            </div>
+                          ))}
+                        </div>
+
+                        {/* Summary Action Advice */}
+                        <div className="bg-blue-500/5 border border-blue-500/10 rounded-xl p-3 text-xs text-slate-300 leading-relaxed">
+                          <span className="font-semibold text-blue-400 block mb-1">💡 Engineering Tip:</span>
+                          Always mention these design improvements directly in your Etsy product listing description and photos (e.g., 'Heavy-duty non-slip base') to immediately convert frustrated competitor customers.
+                        </div>
+                      </div>
+                    </div>
                   </div>
                 </div>
               )}

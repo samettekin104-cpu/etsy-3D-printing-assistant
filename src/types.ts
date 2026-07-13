@@ -123,6 +123,12 @@ export interface LegalRiskCheck {
   isSafeToSell: boolean;
 }
 
+export interface CustomerSentiment {
+  commonPainPoints: { painPoint: string; frequencyPercent: number; impactLevel: "High" | "Medium" | "Low"; description: string }[];
+  topCompetitorReviews: { rating: number; reviewText: string; competitorName: string; keyIssue: string }[];
+  improvementSuggestions: { feature: string; priority: "High" | "Medium" | "Low"; designAction: string }[];
+}
+
 export interface Etsy3DProductAnalysis {
   id: string;
   name: string;
@@ -137,6 +143,7 @@ export interface Etsy3DProductAnalysis {
   scorecard: ScorecardMetrics;
   marketDemandAnalysis: string;
   competitors: CompetitorListing[];
+  customerSentiment?: CustomerSentiment;
   printing: PrintingParameters;
   cadBrief: CADBrief;
   imagePrompts: ImagePromptPackage;

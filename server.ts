@@ -6,6 +6,57 @@ import dotenv from "dotenv";
 
 dotenv.config();
 
+// Helper function to call Gemini API with fallback models and retry logic for temporary errors (like 503 Service Unavailable or rate limits)
+async function callGeminiWithFallback(
+  ai: any,
+  baseParams: any,
+  candidateModels: string[] = ["gemini-3.5-flash", "gemini-3.1-flash-lite", "gemini-flash-latest"],
+  retriesPerModel = 2,
+  initialDelayMs = 1000
+): Promise<any> {
+  let lastError: any = null;
+
+  for (const model of candidateModels) {
+    let delayMs = initialDelayMs;
+    console.log(`Attempting Gemini API call with model: ${model}`);
+    
+    for (let attempt = 0; attempt < retriesPerModel; attempt++) {
+      try {
+        const response = await ai.models.generateContent({
+          ...baseParams,
+          model: model,
+        });
+        console.log(`Gemini API call succeeded using model: ${model}`);
+        return response;
+      } catch (error: any) {
+        lastError = error;
+        const errMsg = error.message?.toLowerCase() || "";
+        const isTemporary = 
+          error.status === 503 || 
+          error.status === 429 ||
+          errMsg.includes("503") || 
+          errMsg.includes("429") ||
+          errMsg.includes("unavailable") || 
+          errMsg.includes("high demand") || 
+          errMsg.includes("rate limit") || 
+          errMsg.includes("quota") ||
+          errMsg.includes("overloaded");
+
+        if (isTemporary && attempt < retriesPerModel - 1) {
+          console.warn(`Gemini API temporary error with model ${model} (Attempt ${attempt + 1}/${retriesPerModel}). Retrying in ${delayMs}ms... Error: ${error.message}`);
+          await new Promise(resolve => setTimeout(resolve, delayMs));
+          delayMs *= 2; // exponential backoff
+        } else {
+          console.warn(`Gemini API call failed for model ${model} on attempt ${attempt + 1}. Error: ${error.message}`);
+          break; // Try next fallback model
+        }
+      }
+    }
+  }
+  
+  throw lastError || new Error("Gemini API call failed for all models.");
+}
+
 const app = express();
 const PORT = 3000;
 
@@ -196,11 +247,35 @@ Follow this JSON schema EXACTLY:
     "copyrightPatentCheck": "string patent similarities",
     "warnings": "string copyright notices or warnings",
     "isSafeToSell": boolean
+  },
+  "customerSentiment": {
+    "commonPainPoints": [
+      {
+        "painPoint": "string label of pain point",
+        "frequencyPercent": number frequency (0 to 100),
+        "impactLevel": "High" | "Medium" | "Low",
+        "description": "string detailed explanation"
+      }
+    ],
+    "topCompetitorReviews": [
+      {
+        "rating": number (1-5),
+        "reviewText": "string simulated quote based on typical competitor flaws",
+        "competitorName": "string competitor name",
+        "keyIssue": "string short issue summary"
+      }
+    ],
+    "improvementSuggestions": [
+      {
+        "feature": "string improved feature name",
+        "priority": "High" | "Medium" | "Low",
+        "designAction": "string actionable design correction/improvement"
+      }
+    ]
   }
 }`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+    const response = await callGeminiWithFallback(ai, {
       contents: prompt,
       config: {
         responseMimeType: "application/json",
@@ -625,6 +700,22 @@ function generateSimulatedResponse(concept: string): any {
       copyrightPatentCheck: "Entirely self-contained design geometry is 100% proprietary, preventing automated takedowns or legal claims.",
       warnings: "Ensure that description doesn't use third-party trademarked names (such as Apple or Sony) as direct keywords, but instead as compatibility notes (e.g. 'Compatible with AirPods').",
       isSafeToSell: true
+    },
+    customerSentiment: {
+      commonPainPoints: [
+        { painPoint: "Flimsy or brittle structure", frequencyPercent: 45, impactLevel: "High", description: `Many competitor products printed with generic settings or thin walls break easily under load.` },
+        { painPoint: "Inconsistent fit/tolerances", frequencyPercent: 32, impactLevel: "Medium", description: "Parts printed by competitors often do not snap or slide together cleanly due to bad shrinkage calculation." },
+        { painPoint: "Lacks premium finish", frequencyPercent: 25, impactLevel: "Low", description: "Competitors using cheap PLA filaments have prominent layer lines and shiny, cheap-looking surfaces." }
+      ],
+      topCompetitorReviews: [
+        { rating: 2, reviewText: "It snapped the second day. The plastic feels extremely cheap and thin. Definitely not worth the money.", competitorName: "QuickPrintStudio", keyIssue: "Brittle walls / broke easily" },
+        { rating: 3, reviewText: "The design is okay but I spent an hour sanding the tabs down just to make the pieces fit together. Very frustrating.", competitorName: "EtsyMakers3D", keyIssue: "Bad joint tolerances" }
+      ],
+      improvementSuggestions: [
+        { feature: "Reinforced Multi-Wall Configuration", priority: "High", designAction: "Recommend 3 or 4 perimeters/wall loops and gyroid infill to guarantee incredible structural strength." },
+        { feature: "Precision Slide Tolerances", priority: "Medium", designAction: "Tune joint tolerances to exactly 0.20mm to allow a reliable snap-fit without any manual sanding." },
+        { feature: "Matte/Textured Bio-Plastic", priority: "Low", designAction: "Advertise matte PLA and use textured PEI print sheets to achieve a clean, professional, high-end look." }
+      ]
     }
   };
 }
@@ -686,8 +777,7 @@ Return a JSON array containing exactly 3 distinct concepts matching this schema:
   }
 ]`;
 
-    const response = await ai.models.generateContent({
-      model: "gemini-3.5-flash",
+    const response = await callGeminiWithFallback(ai, {
       contents: prompt,
       config: {
         responseMimeType: "application/json",
