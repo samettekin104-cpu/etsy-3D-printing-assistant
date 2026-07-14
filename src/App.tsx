@@ -35,7 +35,70 @@ import {
 import { PREDEFINED_PRODUCTS } from "./mockData";
 import { Etsy3DProductAnalysis } from "./types";
 
+const TRANSLATIONS: Record<string, string> = {
+  // Navigation & General
+  "axiom_title": "3D Baskı Etsy Aksiyomu",
+  "axiom_desc": "Etsy alıcıları görsel benzersizlik ve kişiselleştirme için ekstra ödeme yapar. Yüksek üretim hızı ve sorunsuz sipariş teslimatı sağlamak için kargo ağırlığını düşük tutun ve tasarımları %100 desteksiz basılacak şekilde optimize edin.",
+  "current_scan": "AKTİF ANALİZ",
+  "est_revenue": "TAHMİNİ GELİR",
+  "weight": "AĞIRLIK",
+  "print_time": "BASKI SÜRESİ",
+  "revenue_cap": "Gelir Tavanı",
+  "niche_success": "Başarı Olasılığı",
+  "sale_velocity": "İlk Satış Hızı",
+  "days": "Gün",
+  "hours": "Saat",
+  "grams": "Gram",
+  "success_score": "Skor",
+  "discover_trending_ideas": "Bunun yerine trend olan fikirleri mi keşfetmek istiyorsunuz? Yapay zeka ile yeni nişleri tarayın!",
+  "hide_scanner": "Dinamik Taramayı Gizle",
+  "launch_scanner": "Dinamik Trend Taramasını Başlat",
+  "forging": "Analiz Ediliyor...",
+  "run_scan": "13 Aşamalı Taramayı Çalıştır",
+  "search_placeholder": "Araştırmak ve üretmek istediğiniz ürün fikrini yazın...",
+  "concept_scanner_desc": "Pazar hacmini, CAD tasarım özetlerini, 3D dilimleyici optimizasyonlarını, Etsy etiketlerini, gerçek marjları ve yasal riskleri analiz etmek için herhangi bir 3D yazdırılabilir ürün fikrini (örn. 'Modüler Petek Oyun Kolu Standı' veya 'Kendini Sulayan Botanik Bitki Rafı') yazın.",
+  "concept_scanner_title": "Yapay Zeka Ürün Geliştirme Matrisi",
+  "app_title": "PRINTFORGE INTELLIGENCE",
+  "app_subtitle": "YAPAY ZEKA DESTEKLİ 3D BASKI ÜRÜN ANALİZİ & ÜRETİM ZEKASI",
+  "active_portfolio": "Aktif Portföy Size",
+  "validated_niches_count": "Doğrulanmış Niş",
+  "banner_axiom": "Etsy En Çok Satan Stratejisi: Maksimum ölçek için baskı ağırlığını 300g'ın, baskı süresini ise 8 saatin altında optimize edin.",
+  "category_sieve": "Kategori Keşif Eleği",
+  "category_sieve_desc": "Doğrudan Etsy pazaryerinden canlı trend olan 3D baskı nişlerini süzün.",
+  "select_cat_scan": "Taramak için kategori seçin:",
+  "discover_niches_btn": "Yüksek Talepli Nişleri Keşfet",
+  "discovering_niches": "Nişler Keşfediliyor...",
+  "scan_success_not": "Canlı Etsy Trend Taraması Başarıyla Senkronize Edildi!",
+  "scan_notice_sim": "Bu simüle edilmiş bir taramadır. Canlı yapay zeka analizi için GEMINI_API_KEY ayarlayın.",
+
+  // Tabs
+  "tab_scorecard": "Fırsat Karnesi",
+  "tab_competitors": "Rakip Kıyaslama",
+  "tab_sentiment": "Müşteri Memnuniyeti",
+  "tab_etsyExamples": "Canlı Etsy Örnekleri",
+  "tab_customizer": "3D Özelleştirici",
+  "tab_slicing": "3D Baskı Ayarları",
+  "tab_cad": "CAD Mühendisliği",
+  "tab_prompts": "AI Ürün Görselleri",
+  "tab_seo": "Etsy SEO Optimizasyonu",
+  "tab_pricing": "Kâr Simülatörü",
+  "tab_marketing": "Pazarlama Kampanyaları",
+  "tab_legal": "Yasal & Marka Denetimi"
+};
+
 export default function App() {
+  const [lang, setLang] = useState<"EN" | "TR">(() => {
+    const saved = localStorage.getItem("printforge_lang");
+    return (saved === "TR" || saved === "EN") ? saved : "EN";
+  });
+
+  const t = (key: string, fallback: string): string => {
+    if (lang === "TR") {
+      return TRANSLATIONS[key] || fallback;
+    }
+    return fallback;
+  };
+
   const [products, setProducts] = useState<Etsy3DProductAnalysis[]>(PREDEFINED_PRODUCTS);
   const [selectedProductId, setSelectedProductId] = useState<string>(PREDEFINED_PRODUCTS[0]?.id || "");
   const [searchConcept, setSearchConcept] = useState<string>("");
@@ -73,8 +136,151 @@ export default function App() {
   const [dynamicPackaging, setDynamicPackaging] = useState<number>(0.95);
   const [dynamicShipping, setDynamicShipping] = useState<number>(3.80);
 
+  // Etsy Live Examples system states
+  const [etsySearchKeyword, setEtsySearchKeyword] = useState<string>("");
+  const [etsyResearchResult, setEtsyResearchResult] = useState<any | null>(null);
+  const [isResearchingEtsy, setIsResearchingEtsy] = useState<boolean>(false);
+  const [etsyResearchError, setEtsyResearchError] = useState<string | null>(null);
+  const [etsyResearchMessage, setEtsyResearchMessage] = useState<string | null>(null);
+
   // Active product model
-  const selectedProduct = products.find((p) => p.id === selectedProductId) || products[0];
+  const rawSelectedProduct = products.find((p) => p.id === selectedProductId) || products[0];
+
+  const selectedProduct: Etsy3DProductAnalysis = rawSelectedProduct ? {
+    ...rawSelectedProduct,
+    scorecard: {
+      demandScore: 80,
+      competitionScore: 50,
+      profitMarginScore: 80,
+      productionTimeScore: 80,
+      difficultyLevel: "Medium",
+      customizationPotential: 80,
+      repeatCustomerPotential: 50,
+      giftability: 80,
+      scalability: 80,
+      legalRisk: "Low",
+      overallScore: 80,
+      ...(rawSelectedProduct.scorecard || {})
+    },
+    printing: {
+      recommendedPrinterType: "FDM",
+      plaCompatible: true,
+      petgCompatible: true,
+      absCompatible: false,
+      tpuCompatible: false,
+      compatibleMaterialsText: "PLA / PETG",
+      nozzleSize: "0.4mm",
+      layerHeight: "0.20mm",
+      infillPercent: 15,
+      supportsRequired: "None",
+      orientation: "Flat on bed",
+      estimatedPrintTime: "4h",
+      estimatedPrintTimeMinutes: 240,
+      materialConsumptionGrams: 150,
+      filamentCostPerKg: 20,
+      failureRisks: [],
+      optimizationSuggestions: [],
+      strengthImprovements: [],
+      toleranceRecommendations: "0.20mm",
+      assemblyRecommendations: "No assembly required",
+      ...(rawSelectedProduct.printing || {})
+    },
+    cadBrief: {
+      dimensions: "150mm x 150mm x 150mm",
+      wallThickness: "2.4mm",
+      filletsAndChamfers: "1.5mm bottom chamfer",
+      snapFits: "None",
+      threads: "None",
+      hardwareRequired: "None",
+      movingParts: "None",
+      explodedViewDescription: "Single piece",
+      manufacturingConstraints: "None",
+      ...(rawSelectedProduct.cadBrief || {})
+    },
+    imagePrompts: {
+      midjourney: "",
+      flux: "",
+      ideogram: "",
+      dalle: "",
+      heroImagePrompt: "",
+      lifestylePhotoPrompt: "",
+      studioPhotoPrompt: "",
+      packagingPhotoPrompt: "",
+      ...(rawSelectedProduct.imagePrompts || {})
+    },
+    seo: {
+      optimizedTitle: rawSelectedProduct.name || "",
+      tags13: [],
+      primaryKeywords: [],
+      secondaryKeywords: [],
+      longTailKeywords: [],
+      searchIntent: "",
+      category: "",
+      attributes: "",
+      descriptionText: rawSelectedProduct.description || "",
+      bulletPoints: [],
+      faqs: [],
+      altTexts: [],
+      imageFileNames: [],
+      ...(rawSelectedProduct.seo || {})
+    },
+    pricing: {
+      materialCost: 3.00,
+      electricityCost: 0.15,
+      machineTimeCost: 0.50,
+      laborCost: 1.00,
+      packagingCost: 0.85,
+      shippingCost: 3.50,
+      etsyListingFee: 0.20,
+      etsyTransactionFee: 1.82,
+      etsyProcessingFee: 1.37,
+      recommendedRetailPrice: 28.00,
+      premiumPrice: 36.00,
+      discountStrategy: "",
+      bundleStrategy: "",
+      ...(rawSelectedProduct.pricing || {})
+    },
+    marketing: {
+      pinterestStrategy: "",
+      tiktokStrategy: "",
+      instagramStrategy: "",
+      youtubeShortsStrategy: "",
+      launchCampaign: "",
+      ugcStrategy: "",
+      contentCalendar4Weeks: [],
+      ...(rawSelectedProduct.marketing || {})
+    },
+    automations: {
+      zapierAutomations: [],
+      n8nWorkflows: [],
+      inventoryOrderTracking: "",
+      ...(rawSelectedProduct.automations || {})
+    },
+    legal: {
+      trademarkCheck: "",
+      copyrightPatentCheck: "",
+      warnings: "",
+      isSafeToSell: true,
+      ...(rawSelectedProduct.legal || {})
+    },
+    competitors: rawSelectedProduct.competitors || [],
+    customerSentiment: {
+      commonPainPoints: [
+        { painPoint: "Structural / Joint Tolerances", frequencyPercent: 65, impactLevel: "High", description: "Mechanical sliding fits or tolerances can be too tight or too loose depending on the printer calibration." },
+        { painPoint: "High filament usage and long print time", frequencyPercent: 28, impactLevel: "Medium", description: "Using too much solid infill increases part cost and makes the print cycle uncompetitive." },
+        { painPoint: "Supports leaving surface scars", frequencyPercent: 15, impactLevel: "Low", description: "Design overhangs requiring supports leave visible scarring that ruins the aesthetic." }
+      ],
+      topCompetitorReviews: [
+        { rating: 4, reviewText: "I really like the aesthetic of this organizer, but the tolerance is so small that I had to sand the joints down for 20 minutes to make them fit.", competitorName: "3DPrintGurus", keyIssue: "Joint fits too tight" },
+        { rating: 3, reviewText: "Beautiful structure, but because it's printed in light plastic, it slips around my desk when I pull my headphones off.", competitorName: "EtsyCreations", keyIssue: "Lacks base weight / stability" }
+      ],
+      improvementSuggestions: [
+        { feature: "Optimized Tolerance Clearances", priority: "High", designAction: "Tune joint tolerances to exactly 0.20-0.25mm to avoid manual sanding." },
+        { feature: "Supportless Overhang Angles", priority: "Medium", designAction: "Keep overhangs at 45 degrees or steeper for zero-failure supportless prints." }
+      ],
+      ...(rawSelectedProduct.customerSentiment || {})
+    }
+  } : products[0];
 
   // Keep slider states in sync with the selected product
   useEffect(() => {
@@ -85,6 +291,12 @@ export default function App() {
       setDynamicLabor(selectedProduct.pricing.laborCost);
       setDynamicPackaging(selectedProduct.pricing.packagingCost);
       setDynamicShipping(selectedProduct.pricing.shippingCost);
+      
+      // Preset Etsy search box & clear custom research states
+      setEtsySearchKeyword(selectedProduct.name);
+      setEtsyResearchResult(null);
+      setEtsyResearchError(null);
+      setEtsyResearchMessage(null);
     }
   }, [selectedProductId]);
 
@@ -121,7 +333,7 @@ export default function App() {
         const response = await fetch("/api/scan-niches", {
           method: "POST",
           headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ category: selectedScanCategory })
+          body: JSON.stringify({ category: selectedScanCategory, lang })
         });
         const result = await response.json();
         if (result && result.data) {
@@ -146,38 +358,36 @@ export default function App() {
   const handleValidateDiscoveredNiche = (nicheName: string) => {
     setSearchConcept(nicheName);
     setIsNicheScannerOpen(false);
+    startScanning(nicheName);
     
-    // Smooth delay to allow the drawer to close, then submit the concept scanner form
+    // Smooth scroll to top/concept scanner so progress is fully visible
     setTimeout(() => {
-      const form = document.getElementById("concept-scanner-form") as HTMLFormElement;
-      if (form) {
-        // Trigger submit
-        form.dispatchEvent(new Event("submit", { cancelable: true, bubbles: true }));
+      const element = document.getElementById("concept-scanner");
+      if (element) {
+        element.scrollIntoView({ behavior: "smooth", block: "start" });
       }
-    }, 300);
+    }, 50);
   };
 
   // Rolling analyzer phases simulator
   const scanningPhases = [
-    { text: "Scanning Etsy Market Demands...", duration: 1500 },
-    { text: "Scraping Top Etsy Competitor Listings...", duration: 1500 },
-    { text: "Simulating CAD Engineering Specs & Tolerances...", duration: 1800 },
-    { text: "Evaluating Slicing & Nozzle Parameters...", duration: 1500 },
-    { text: "Formulating Professional SEO Packages & Tagging...", duration: 1600 },
-    { text: "Modeling Amortized Profit Margins & Fees...", duration: 1200 },
-    { text: "Designing 4-Week Launch Marketing Campaigns...", duration: 1200 },
-    { text: "Auditing Trademarks & Legal Safety Standards...", duration: 1000 }
+    { text: "Scanning Etsy Market Demands...", duration: 250 },
+    { text: "Scraping Top Etsy Competitor Listings...", duration: 250 },
+    { text: "Simulating CAD Engineering Specs & Tolerances...", duration: 300 },
+    { text: "Evaluating Slicing & Nozzle Parameters...", duration: 250 },
+    { text: "Formulating Professional SEO Packages & Tagging...", duration: 250 },
+    { text: "Modeling Amortized Profit Margins & Fees...", duration: 200 },
+    { text: "Designing 4-Week Launch Marketing Campaigns...", duration: 200 },
+    { text: "Auditing Trademarks & Legal Safety Standards...", duration: 200 }
   ];
 
-  const handleScan = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (isScanning || !searchConcept.trim()) return;
+  const startScanning = (concept: string) => {
+    if (isScanning || !concept.trim()) return;
 
     setIsScanning(true);
     setScanningPhase(0);
     setScanMessage("Initializing Product Forge Engine...");
 
-    // Run a step-by-step mock scanner visual animation
     let currentPhase = 0;
     const runPhases = () => {
       if (currentPhase < scanningPhases.length) {
@@ -188,26 +398,39 @@ export default function App() {
           runPhases();
         }, scanningPhases[currentPhase].duration);
       } else {
-        // Now hit our actual fullstack API endpoint to fetch Gemini research!
-        performAnalysis();
+        performAnalysis(concept);
       }
     };
 
     runPhases();
   };
 
-  const performAnalysis = async () => {
+  const handleScan = async (e: React.FormEvent) => {
+    e.preventDefault();
+    startScanning(searchConcept);
+  };
+
+  const performAnalysis = async (conceptToAnalyze?: string) => {
+    const concept = conceptToAnalyze || searchConcept;
+    if (!concept.trim()) return;
+
     try {
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ concept: searchConcept })
+        body: JSON.stringify({ concept, lang })
       });
 
       const result = await response.json();
       if (result && result.data) {
         // Add analyzed product to list
         const newProduct = result.data as Etsy3DProductAnalysis;
+        
+        // Guarantee completely unique ID in case of collisions or fallback slug issues
+        if (!newProduct.id || products.some(p => p.id === newProduct.id)) {
+          newProduct.id = `${newProduct.id || "product"}-${Date.now()}`;
+        }
+
         setProducts((prev) => [newProduct, ...prev]);
         setSelectedProductId(newProduct.id);
         setSearchConcept("");
@@ -218,6 +441,40 @@ export default function App() {
       setIsScanning(false);
       setScanningPhase(0);
       setScanMessage("");
+    }
+  };
+
+  const handleResearchEtsy = async (e?: React.FormEvent) => {
+    if (e) e.preventDefault();
+    if (!etsySearchKeyword.trim() || isResearchingEtsy) return;
+
+    setIsResearchingEtsy(true);
+    setEtsyResearchError(null);
+    setEtsyResearchMessage(null);
+
+    try {
+      const response = await fetch("/api/etsy-examples", {
+        method: "POST",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify({ keyword: etsySearchKeyword, lang })
+      });
+
+      const result = await response.json();
+      if (response.ok && result && result.data) {
+        setEtsyResearchResult(result.data);
+        if (result.simulated) {
+          setEtsyResearchMessage(result.message || "Loaded simulation analysis.");
+        } else {
+          setEtsyResearchMessage("Live research synchronized successfully via Google Search Grounding!");
+        }
+      } else {
+        throw new Error(result.error || "Etsy search failed.");
+      }
+    } catch (err: any) {
+      console.error("Etsy research failed:", err);
+      setEtsyResearchError(err.message || "Failed to query Etsy market. Please try again.");
+    } finally {
+      setIsResearchingEtsy(false);
     }
   };
 
@@ -304,7 +561,7 @@ export default function App() {
       {/* Top Banner Indicator */}
       <div className="bg-gradient-to-r from-blue-600 to-blue-500 py-1.5 px-4 text-center text-xs font-semibold text-white tracking-wide flex items-center justify-center gap-2">
         <Sparkles className="w-3.5 h-3.5 animate-pulse" />
-        <span>Etsy Top Seller Strategy: Optimize print weight under 300g and print times under 8 hours for maximum scale.</span>
+        <span>{t("banner_axiom", "Etsy Top Seller Strategy: Optimize print weight under 300g and print times under 8 hours for maximum scale.")}</span>
       </div>
 
       {/* Main Container */}
@@ -325,26 +582,56 @@ export default function App() {
                 </span>
                 <div className="flex items-center gap-1.5 text-xs text-slate-500 font-mono">
                   <span className="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></span>
-                  <span>PHASE 13: FINAL SCORE ENGINE</span>
+                  <span>{lang === "TR" ? "AŞAMA 13: GENEL SKOR MOTORU" : "PHASE 13: FINAL SCORE ENGINE"}</span>
                 </div>
               </div>
               <h1 className="text-2xl md:text-3xl font-display font-extrabold tracking-tight text-white mt-1">
                 PRINTFORGE <span className="text-blue-500">INTELLIGENCE</span>
               </h1>
               <p className="text-slate-400 text-xs mt-0.5 font-mono uppercase tracking-wider">
-                AI PRODUCT RESEARCH & MANUFACTURING INTELLIGENCE
+                {t("app_subtitle", "AI PRODUCT RESEARCH & MANUFACTURING INTELLIGENCE")}
               </p>
             </div>
           </div>
 
-          {/* Quick Stats Summary */}
-          <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl p-4 self-start md:self-auto">
-            <div className="text-right">
-              <span className="text-[10px] text-slate-500 font-mono block uppercase tracking-widest">Active Portfolio Size</span>
-              <span className="text-lg font-display font-bold text-white block">{products.length} Validated Niches</span>
+          <div className="flex flex-wrap items-center gap-3 self-start md:self-auto">
+            {/* Language Selector */}
+            <div className="flex items-center gap-1 bg-white/5 border border-white/10 p-1 rounded-2xl">
+              <button
+                type="button"
+                onClick={() => {
+                  setLang("EN");
+                  localStorage.setItem("printforge_lang", "EN");
+                }}
+                className={`px-3 py-1.5 rounded-xl text-[10px] font-mono font-bold tracking-wide transition-all cursor-pointer ${
+                  lang === "EN" ? "bg-blue-600 text-white shadow" : "text-slate-400 hover:text-white"
+                }`}
+              >
+                EN
+              </button>
+              <button
+                type="button"
+                onClick={() => {
+                  setLang("TR");
+                  localStorage.setItem("printforge_lang", "TR");
+                }}
+                className={`px-3 py-1.5 rounded-xl text-[10px] font-mono font-bold tracking-wide transition-all cursor-pointer ${
+                  lang === "TR" ? "bg-blue-600 text-white shadow" : "text-slate-400 hover:text-white"
+                }`}
+              >
+                TR
+              </button>
             </div>
-            <div className="h-10 w-[1px] bg-white/10"></div>
-            <Compass className="w-7 h-7 text-blue-500" />
+
+            {/* Quick Stats Summary */}
+            <div className="flex items-center gap-4 bg-white/5 border border-white/10 rounded-2xl p-3">
+              <div className="text-right">
+                <span className="text-[9px] text-slate-500 font-mono block uppercase tracking-widest">{t("active_portfolio", "Active Portfolio Size")}</span>
+                <span className="text-sm font-display font-bold text-white block">{products.length} {t("validated_niches_count", "Validated Niches")}</span>
+              </div>
+              <div className="h-8 w-[1px] bg-white/10"></div>
+              <Compass className="w-5 h-5 text-blue-500" />
+            </div>
           </div>
         </header>
 
@@ -355,10 +642,10 @@ export default function App() {
           <div className="max-w-3xl">
             <h2 className="text-lg font-display font-semibold text-white flex items-center gap-2">
               <Cpu className="w-5 h-5 text-blue-500" />
-              <span>AI Product Forge Matrix</span>
+              <span>{t("concept_scanner_title", "AI Product Forge Matrix")}</span>
             </h2>
             <p className="text-xs text-slate-400 mt-0.5 leading-relaxed">
-              Enter any 3D printable product idea (e.g., 'Modular Honeycomb Gamepad Dock' or 'Self-Watering Botanical Plant Shelf') to analyze market size, CAD design briefs, print slicer optimizations, Etsy tags, real margins, and legal risk assessment.
+              {t("concept_scanner_desc", "Enter any 3D printable product idea (e.g., 'Modular Honeycomb Gamepad Dock' or 'Self-Watering Botanical Plant Shelf') to analyze market size, CAD design briefs, print slicer optimizations, Etsy tags, real margins, and legal risk assessment.")}
             </p>
 
             <form id="concept-scanner-form" onSubmit={handleScan} className="mt-4 flex flex-col sm:flex-row gap-2.5">
@@ -366,7 +653,7 @@ export default function App() {
                 <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4.5 h-4.5 text-slate-500" />
                 <input
                   type="text"
-                  placeholder="Type product idea to research and build..."
+                  placeholder={t("search_placeholder", "Type product idea to research and build...")}
                   value={searchConcept}
                   onChange={(e) => setSearchConcept(e.target.value)}
                   disabled={isScanning}
@@ -381,13 +668,13 @@ export default function App() {
               >
                 {isScanning ? (
                   <>
-                    <RefreshCw className="w-4 h-4 animate-spin" />
-                    <span>Forging...</span>
+                     <RefreshCw className="w-4 h-4 animate-spin" />
+                     <span>{t("forging", "Forging...")}</span>
                   </>
                 ) : (
                   <>
                     <Plus className="w-4 h-4 stroke-[2.5px]" />
-                    <span>Run 13-Phase Scan</span>
+                    <span>{t("run_scan", "Run 13-Phase Scan")}</span>
                   </>
                 )}
               </button>
@@ -397,7 +684,7 @@ export default function App() {
             <div className="mt-4 flex flex-wrap items-center justify-between gap-3 pt-4 border-t border-white/5">
               <div className="flex items-center gap-2">
                 <span className="flex h-2 w-2 rounded-full bg-orange-500 animate-pulse"></span>
-                <span className="text-xs text-slate-400">Want to discover trending ideas instead? Let AI scan for emerging niches!</span>
+                <span className="text-xs text-slate-400">{t("discover_trending_ideas", "Want to discover trending ideas instead? Let AI scan for emerging niches!")}</span>
               </div>
               <button
                 type="button"
@@ -405,7 +692,7 @@ export default function App() {
                 className="text-xs font-semibold text-orange-400 hover:text-orange-300 flex items-center gap-1.5 px-3 py-1.5 bg-orange-500/10 hover:bg-orange-500/15 border border-orange-500/20 rounded-lg transition-all cursor-pointer"
               >
                 <Flame className="w-3.5 h-3.5" />
-                <span>{isNicheScannerOpen ? "Hide Dynamic Scanner" : "Launch Dynamic Niche Scanner"}</span>
+                <span>{isNicheScannerOpen ? t("hide_scanner", "Hide Dynamic Scanner") : t("launch_scanner", "Launch Dynamic Niche Scanner")}</span>
               </button>
             </div>
           </div>
@@ -683,7 +970,7 @@ export default function App() {
             {/* Active Product Headline Info */}
             <div className="bg-[#15171C] border border-white/10 rounded-2xl p-5 md:p-6 shadow-xl flex flex-col md:flex-row md:items-center justify-between gap-5">
               <div>
-                <span className="text-xs font-mono text-blue-500 font-semibold tracking-wider block">CURRENT ACTIVE SCAN</span>
+                <span className="text-xs font-mono text-blue-500 font-semibold tracking-wider block">{t("current_scan", "CURRENT ACTIVE SCAN")}</span>
                 <h2 className="text-2xl font-display font-bold text-white mt-1">{selectedProduct.name}</h2>
                 <p className="text-xs text-slate-400 mt-1 max-w-xl">{selectedProduct.description}</p>
               </div>
@@ -691,16 +978,16 @@ export default function App() {
               {/* High-level Success KPIs */}
               <div className="flex gap-4 self-start md:self-auto">
                 <div className="bg-[#0A0B0E] border border-white/10 p-3 rounded-2xl text-center min-w-[95px]">
-                  <span className="text-[9px] font-mono text-slate-500 block uppercase tracking-widest">Revenue Cap</span>
+                  <span className="text-[9px] font-mono text-slate-500 block uppercase tracking-widest">{t("revenue_cap", "Revenue Cap")}</span>
                   <span className="text-base font-mono font-bold text-emerald-400">${selectedProduct.monthlyRevenuePotential}</span>
                 </div>
                 <div className="bg-[#0A0B0E] border border-white/10 p-3 rounded-2xl text-center min-w-[95px]">
-                  <span className="text-[9px] font-mono text-slate-500 block uppercase tracking-widest">Niche Success</span>
+                  <span className="text-[9px] font-mono text-slate-500 block uppercase tracking-widest">{t("niche_success", "Niche Success")}</span>
                   <span className="text-base font-mono font-bold text-blue-500">{selectedProduct.probabilityOfSuccessPercent}%</span>
                 </div>
                 <div className="bg-[#0A0B0E] border border-white/10 p-3 rounded-2xl text-center min-w-[95px]">
-                  <span className="text-[9px] font-mono text-slate-500 block uppercase tracking-widest">Sale Velocity</span>
-                  <span className="text-base font-mono font-bold text-cyan-400">~{selectedProduct.timeToFirstSaleDays} Days</span>
+                  <span className="text-[9px] font-mono text-slate-500 block uppercase tracking-widest">{t("sale_velocity", "Sale Velocity")}</span>
+                  <span className="text-base font-mono font-bold text-cyan-400">~{selectedProduct.timeToFirstSaleDays} {t("days", "Days")}</span>
                 </div>
               </div>
             </div>
@@ -708,17 +995,18 @@ export default function App() {
             {/* Custom Interactive Workspace Nav Tabs */}
             <nav className="flex flex-wrap gap-1.5 border-b border-white/10 pb-1.5" id="analysis-tabs">
               {[
-                { id: "scorecard", label: "Opportunity Scorecard", icon: Compass },
-                { id: "competitors", label: "Competitor Benchmarking", icon: ShoppingBag },
-                { id: "sentiment", label: "Customer Sentiment", icon: Heart },
-                { id: "customizer", label: "3D Customizer Sandbox", icon: Sliders },
-                { id: "slicing", label: "3D Print Settings", icon: Layers },
-                { id: "cad", label: "CAD Engineering", icon: Wrench },
-                { id: "prompts", label: "Product Photography Prompts", icon: Sparkles },
-                { id: "seo", label: "Etsy SEO Package", icon: Tag },
-                { id: "pricing", label: "Profit Simulator", icon: Calculator },
-                { id: "marketing", label: "Marketing Campaigns", icon: Mail },
-                { id: "legal", label: "Risk & Legal Audit", icon: Scale }
+                { id: "scorecard", label: t("tab_scorecard", "Opportunity Scorecard"), icon: Compass },
+                { id: "competitors", label: t("tab_competitors", "Competitor Benchmarking"), icon: ShoppingBag },
+                { id: "sentiment", label: t("tab_sentiment", "Customer Sentiment"), icon: Heart },
+                { id: "etsyExamples", label: t("tab_etsyExamples", "Etsy Live Examples"), icon: ExternalLink },
+                { id: "customizer", label: t("tab_customizer", "3D Customizer Sandbox"), icon: Sliders },
+                { id: "slicing", label: t("tab_slicing", "3D Print Settings"), icon: Layers },
+                { id: "cad", label: t("tab_cad", "CAD Engineering"), icon: Wrench },
+                { id: "prompts", label: t("tab_prompts", "Product Photography Prompts"), icon: Sparkles },
+                { id: "seo", label: t("tab_seo", "Etsy SEO Package"), icon: Tag },
+                { id: "pricing", label: t("tab_pricing", "Profit Simulator"), icon: Calculator },
+                { id: "marketing", label: t("tab_marketing", "Marketing Campaigns"), icon: Mail },
+                { id: "legal", label: t("tab_legal", "Risk & Legal Audit"), icon: Scale }
               ].map((tab) => {
                 const Icon = tab.icon;
                 const isActive = activeTab === tab.id;
@@ -935,7 +1223,7 @@ export default function App() {
                       <div>
                         <span className="text-[9px] text-slate-500 font-mono block uppercase tracking-widest">CRITICAL PAIN POINT</span>
                         <span className="text-sm font-semibold text-white mt-1.5 block">
-                          {selectedProduct.customerSentiment?.commonPainPoints[0]?.painPoint || "Structural / Joint Tolerances"}
+                          {selectedProduct.customerSentiment?.commonPainPoints?.[0]?.painPoint || "Structural / Joint Tolerances"}
                         </span>
                       </div>
                       <span className="text-[10px] text-rose-400 font-mono mt-3 block">★ Primary Competitive Vulnerability</span>
@@ -1101,6 +1389,238 @@ export default function App() {
                       </div>
                     </div>
                   </div>
+                </div>
+              )}
+
+              {/* TAB: ETSY LIVE EXAMPLES */}
+              {activeTab === "etsyExamples" && (
+                <div className="space-y-6 animate-fadeIn">
+                  {/* Strategic Overview Banner */}
+                  <div className="flex flex-col md:flex-row md:items-center justify-between border-b border-white/10 pb-4 gap-4">
+                    <div>
+                      <h4 className="text-xs font-mono font-bold text-slate-500 uppercase tracking-widest">
+                        Phase 3B: Live Etsy Storefront Examples & Listing Intelligence
+                      </h4>
+                      <p className="text-xs text-slate-400 mt-0.5">
+                        Discover actual top-performing shops, optimal pricing points, photography styles, and high-CTR keyword tags.
+                      </p>
+                    </div>
+                    <div className="flex items-center gap-2">
+                      <span className="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-mono font-bold bg-amber-500/10 text-amber-400 border border-amber-500/20">
+                        <span className="w-1.5 h-1.5 rounded-full bg-amber-400 animate-pulse"></span>
+                        Live Etsy Grounding
+                      </span>
+                    </div>
+                  </div>
+
+                  {/* Active Etsy Niche Research Search Bar */}
+                  <div className="bg-[#0A0B0E] border border-white/10 rounded-2xl p-4 md:p-5">
+                    <form onSubmit={(e) => handleResearchEtsy(e)} className="flex flex-col sm:flex-row gap-3">
+                      <div className="relative flex-1">
+                        <Search className="absolute left-3.5 top-1/2 -translate-y-1/2 w-4 h-4 text-slate-500" />
+                        <input
+                          type="text"
+                          value={etsySearchKeyword}
+                          onChange={(e) => setEtsySearchKeyword(e.target.value)}
+                          placeholder="Enter any keyword (e.g., headphone stand, self-watering planter) to scrape active shops..."
+                          className="w-full bg-[#111317] border border-white/10 rounded-xl pl-11 pr-4 py-2.5 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-blue-500 transition-all font-sans"
+                        />
+                      </div>
+                      <button
+                        type="submit"
+                        disabled={isResearchingEtsy || !etsySearchKeyword.trim()}
+                        className="px-5 py-2.5 rounded-xl text-xs font-bold bg-blue-600 hover:bg-blue-500 disabled:bg-blue-800 disabled:opacity-50 text-white transition-all cursor-pointer flex items-center justify-center gap-2"
+                      >
+                        {isResearchingEtsy ? (
+                          <>
+                            <RefreshCw className="w-3.5 h-3.5 animate-spin" />
+                            <span>Researching Stores...</span>
+                          </>
+                        ) : (
+                          <>
+                            <Search className="w-3.5 h-3.5" />
+                            <span>Research Live Etsy Stores</span>
+                          </>
+                        )}
+                      </button>
+                    </form>
+
+                    {/* Grounding Message & Errors */}
+                    {etsyResearchMessage && (
+                      <div className="mt-3 text-[11px] font-mono text-emerald-400 bg-emerald-500/5 border border-emerald-500/10 px-3.5 py-2 rounded-xl flex items-center gap-2">
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-400 flex-shrink-0" />
+                        <span>{etsyResearchMessage}</span>
+                      </div>
+                    )}
+                    {etsyResearchError && (
+                      <div className="mt-3 text-[11px] font-mono text-rose-400 bg-rose-500/5 border border-rose-500/10 px-3.5 py-2 rounded-xl flex items-center gap-2">
+                        <AlertTriangle className="w-3.5 h-3.5 text-rose-400 flex-shrink-0" />
+                        <span>{etsyResearchError}</span>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Research Loading Overlay */}
+                  {isResearchingEtsy ? (
+                    <div className="flex flex-col items-center justify-center py-16 space-y-4">
+                      <div className="relative">
+                        <div className="w-14 h-14 rounded-full border-t-2 border-r-2 border-blue-500 animate-spin"></div>
+                        <Search className="w-6 h-6 text-blue-400 absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2" />
+                      </div>
+                      <div className="text-center space-y-1.5">
+                        <h5 className="text-xs font-bold text-white font-sans">Etsy Shop Crawler Active</h5>
+                        <p className="text-[11px] text-slate-400 font-mono animate-pulse">
+                          Using Gemini with Google Search Grounding to harvest live listings, sales history, and pricing metrics...
+                        </p>
+                      </div>
+                    </div>
+                  ) : (
+                    (() => {
+                      const data = etsyResearchResult || selectedProduct.etsyLiveExamples;
+                      if (!data) {
+                        return (
+                          <div className="text-center py-12 text-xs text-slate-400 bg-[#0A0B0E]/60 border border-white/5 rounded-2xl">
+                            No active store examples loaded yet. Enter a custom keyword above to fetch live data!
+                          </div>
+                        );
+                      }
+
+                      return (
+                        <div className="space-y-6">
+                          {/* Top Level Market Insight Alert */}
+                          <div className="p-4 bg-blue-500/5 border border-blue-500/10 rounded-2xl space-y-1.5">
+                            <span className="text-[10px] font-mono font-bold text-blue-400 uppercase tracking-widest block">
+                              🔑 CATEGORY WINNING FORMULA & INSIGHTS
+                            </span>
+                            <p className="text-xs text-slate-300 leading-relaxed font-sans">
+                              {data.overallMarketInsight}
+                            </p>
+                          </div>
+
+                          {/* Grid layout: Listings vs Featured Shops */}
+                          <div className="grid grid-cols-1 lg:grid-cols-12 gap-6">
+                            {/* Listings Column */}
+                            <div className="lg:col-span-7 space-y-4">
+                              <h5 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                <ShoppingBag className="w-3.5 h-3.5 text-blue-400" />
+                                Active High-Performance Listings
+                              </h5>
+
+                              <div className="space-y-4">
+                                {data.listings?.map((listing: any, index: number) => (
+                                  <div
+                                    key={index}
+                                    className="border border-white/10 bg-[#0A0B0E] rounded-2xl p-4 space-y-3.5 hover:border-blue-500/30 transition-all"
+                                  >
+                                    <div className="flex justify-between items-start gap-3">
+                                      <div className="space-y-1">
+                                        <span className="text-[10px] font-mono text-slate-500 uppercase tracking-wider block">
+                                          Store: <span className="text-blue-400 font-bold">{listing.shopName}</span>
+                                        </span>
+                                        <h6 className="text-xs text-white font-bold font-sans leading-relaxed">
+                                          {listing.title}
+                                        </h6>
+                                      </div>
+                                      <div className="text-right flex-shrink-0">
+                                        <span className="text-xs font-mono font-bold text-emerald-400 block">${listing.price}</span>
+                                        <span className="text-[10px] font-mono text-slate-400 block mt-0.5">{listing.salesVolume}</span>
+                                      </div>
+                                    </div>
+
+                                    {/* Strategy breakdown */}
+                                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3.5 pt-2 border-t border-white/5 text-[11px]">
+                                      <div className="space-y-1">
+                                        <span className="text-slate-500 font-mono block">Competitive Edge:</span>
+                                        <p className="text-slate-300 leading-relaxed">{listing.successStrategy}</p>
+                                      </div>
+                                      <div className="space-y-1">
+                                        <span className="text-slate-500 font-mono block">Photography & Style:</span>
+                                        <p className="text-slate-300 leading-relaxed">{listing.photographyStyle}</p>
+                                      </div>
+                                    </div>
+
+                                    {/* Tags */}
+                                    <div className="flex flex-wrap gap-1.5 pt-1.5">
+                                      {listing.optimizedTags?.map((tag: string, tagIdx: number) => (
+                                        <span
+                                          key={tagIdx}
+                                          onClick={() => copyToClipboard(tag, `tag-${tag}`)}
+                                          className="px-2 py-0.5 bg-white/5 hover:bg-blue-600/10 hover:text-blue-400 border border-white/5 rounded text-[10px] text-slate-400 font-mono transition-all cursor-pointer flex items-center gap-1"
+                                        >
+                                          <span>#{tag}</span>
+                                          {clipboardFeedback === `tag-${tag}` ? (
+                                            <CheckCircle className="w-2.5 h-2.5 text-blue-400" />
+                                          ) : (
+                                            <Copy className="w-2.5 h-2.5 opacity-50" />
+                                          )}
+                                        </span>
+                                      ))}
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+
+                            {/* Shops Column */}
+                            <div className="lg:col-span-5 space-y-4">
+                              <h5 className="text-xs font-mono font-bold text-slate-400 uppercase tracking-wider flex items-center gap-2">
+                                <Palette className="w-3.5 h-3.5 text-amber-400" />
+                                Top Shop Blueprints
+                              </h5>
+
+                              <div className="space-y-4">
+                                {data.featuredShops?.map((shop: any, index: number) => (
+                                  <div
+                                    key={index}
+                                    className="border border-white/10 bg-[#0A0B0E]/60 rounded-2xl p-4 md:p-5 space-y-3.5"
+                                  >
+                                    <div className="flex justify-between items-center border-b border-white/5 pb-2.5">
+                                      <div>
+                                        <h6 className="text-xs text-white font-bold font-sans">{shop.shopName}</h6>
+                                        <span className="text-[10px] font-mono text-slate-400 block mt-0.5">{shop.nicheFocus}</span>
+                                      </div>
+                                      <div className="text-right">
+                                        <span className="text-xs font-mono font-bold text-amber-400 block">{shop.totalSales} Sales</span>
+                                        <span className="text-[9px] font-mono text-slate-500 block">{shop.activeListingCount} Listings</span>
+                                      </div>
+                                    </div>
+
+                                    {/* Key Takeaways */}
+                                    <div className="space-y-2.5">
+                                      <span className="text-[10px] font-mono text-slate-500 block uppercase tracking-wider">
+                                        💡 TOP TAKEAWAYS FOR SUCCESS:
+                                      </span>
+                                      <ul className="space-y-2 text-xs text-slate-300">
+                                        {shop.successTakeaways?.map((takeaway: string, idx: number) => (
+                                          <li key={idx} className="flex gap-2 items-start leading-relaxed">
+                                            <span className="text-amber-400 mt-1 block font-bold text-xs">•</span>
+                                            <span>{takeaway}</span>
+                                          </li>
+                                        ))}
+                                      </ul>
+                                    </div>
+
+                                    {/* Action links */}
+                                    <div className="pt-2">
+                                      <a
+                                        href={shop.shopUrl}
+                                        target="_blank"
+                                        referrerPolicy="no-referrer"
+                                        className="w-full inline-flex items-center justify-center gap-1.5 px-3 py-2 bg-white/5 border border-white/10 hover:bg-white/10 text-slate-300 rounded-xl text-xs font-bold transition-all"
+                                      >
+                                        <span>Inspect Competitor Storefront</span>
+                                        <ExternalLink className="w-3 h-3" />
+                                      </a>
+                                    </div>
+                                  </div>
+                                ))}
+                              </div>
+                            </div>
+                          </div>
+                        </div>
+                      );
+                    })()
+                  )}
                 </div>
               )}
 

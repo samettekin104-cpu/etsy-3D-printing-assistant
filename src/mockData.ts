@@ -239,6 +239,59 @@ export const PREDEFINED_PRODUCTS: Etsy3DProductAnalysis[] = [
         { feature: "Smooth Headband Cradle", priority: "Medium", designAction: "Apply an elegant chamfer or round-over to the top hanger surface, or design a slide-on soft TPU cushion insert." },
         { feature: "Optimized Dovetail Joint", priority: "Low", designAction: "Reduce the snap-fit overhang friction overlap from 1.2mm to 0.8mm to make sliding into place satisfying and stress-free." }
       ]
+    },
+    etsyLiveExamples: {
+      listings: [
+        {
+          title: "Modern Hexagon Honeycomb Headphone Stand - 3D Printed Gamer Desk Accessory",
+          shopName: "VoxelLabs3D",
+          price: 24.99,
+          rating: 4.8,
+          salesVolume: "1,200+ sales",
+          listingUrl: "https://www.etsy.com/search?q=honeycomb+headphone+stand",
+          successStrategy: "Offers neon glow-in-the-dark colors and a weighted steel base option as an upgrade.",
+          photographyStyle: "Cyberpunk neon ambient desk shot, dark wood background, focused LED lighting on the stand.",
+          optimizedTags: ["gamer gift", "headphone stand", "honeycomb decor", "desk organizer", "streamer setup", "3d printed stand"]
+        },
+        {
+          title: "Minimalist Geometric Headphone Holder - Dual Color Matte Finish",
+          shopName: "FormAndFunctionCo",
+          price: 29.99,
+          rating: 4.9,
+          salesVolume: "450+ sales",
+          listingUrl: "https://www.etsy.com/search?q=geometric+headphone+holder",
+          successStrategy: "Promotes premium matte bioplastic finish that hides 3D printing layer lines.",
+          photographyStyle: "Scandinavian warm minimalist aesthetic, bright natural window light, styled with a high-end metal headset.",
+          optimizedTags: ["minimalist desk", "headphone mount", "tech accessories", "cozy setup", "office decor", "woodland gift"]
+        }
+      ],
+      featuredShops: [
+        {
+          shopName: "VoxelLabs3D",
+          totalSales: "14,500+",
+          activeListingCount: 142,
+          nicheFocus: "Gamer Setup & Tech Accessories",
+          successTakeaways: [
+            "Includes heavy solid steel bolts inside the bottom base so that the plastic feels heavy and premium.",
+            "Uses professional product video demonstrating standard headphones being placed on the stand without it tipping over.",
+            "Offers customized name plate snap-ons for Twitch/YouTube streamers."
+          ],
+          shopUrl: "https://www.etsy.com/market/voxel_labs_3d"
+        },
+        {
+          shopName: "FormAndFunctionCo",
+          totalSales: "3,200+",
+          activeListingCount: 48,
+          nicheFocus: "Eco-Friendly Premium Desk Organizers",
+          successTakeaways: [
+            "Prints exclusively in matte PLA (Bambu Lab / PolyTerra) for a zero-shine ceramic-like texture.",
+            "Packages with sustainable honeycomb paper wrap instead of plastic bubble wrap, which is heavily highlighted in reviews.",
+            "Ships with pre-installed rubber anti-slip pads on the bottom."
+          ],
+          shopUrl: "https://www.etsy.com/market/form_and_function"
+        }
+      ],
+      overallMarketInsight: "Top sellers in the headphone stand category win by targeting streamer and gaming setup aesthetics. Overcoming the lightweight nature of plastic stands using metal inserts or wide-stance bases is the #1 way to secure 5-star reviews."
     }
   },
   {
@@ -463,6 +516,59 @@ export const PREDEFINED_PRODUCTS: Etsy3DProductAnalysis[] = [
         { feature: "Watertight Inner Wall Seal", priority: "High", designAction: "Increase standard perimeter walls to 4 layers and recommend a slightly elevated printing temperature (+10°C) to ensure tight layer fusion." },
         { feature: "Finger Recesses & Grip Flange", priority: "Medium", designAction: "Add two subtle semi-circular finger recesses on opposite sides of the reservoir tray so users can lift the inner pot easily." }
       ]
+    },
+    etsyLiveExamples: {
+      listings: [
+        {
+          title: "Self-Watering Hexagonal Geometric Planter - Leak-Proof 3D Printed Pot",
+          shopName: "PrismPottery3D",
+          price: 18.99,
+          rating: 4.7,
+          salesVolume: "2,100+ sales",
+          listingUrl: "https://www.etsy.com/search?q=self+watering+hex+planter",
+          successStrategy: "Highlights leak-proof reservoir in bullet points and shows water level window in the first listing photo.",
+          photographyStyle: "Bright outdoor patio shot, lush green succulent potted, water droplets showing freshness.",
+          optimizedTags: ["self watering pot", "hex planter", "indoor plant gift", "succulent pot", "3d printed planter", "modern garden"]
+        },
+        {
+          title: "Minimalist Pastel Self-Watering Flower Pot - Eco-friendly PLA",
+          shopName: "Flora3DDesign",
+          price: 21.50,
+          rating: 4.9,
+          salesVolume: "850+ sales",
+          listingUrl: "https://www.etsy.com/search?q=minimalist+self+watering+pot",
+          successStrategy: "Bundles three sizes (small, medium, large) as a nesting set with a 15% discount.",
+          photographyStyle: "Soft pastel studio backdrop, elegant monstera plant potted, lifestyle window-sill shot.",
+          optimizedTags: ["pastel flower pot", "geometric planter", "drainage pot", "houseplant lover", "cute planter", "boho plant pot"]
+        }
+      ],
+      featuredShops: [
+        {
+          shopName: "PrismPottery3D",
+          totalSales: "8,900+",
+          activeListingCount: 65,
+          nicheFocus: "Modern Geometric Plant Pots & Planters",
+          successTakeaways: [
+            "Integrates a transparent acrylic rod or a visible grid slot on the side of the pot so users can see the water level easily.",
+            "Uses 100% waterproof food-safe PETG plastic or high-temp coating on the inside reservoir.",
+            "Leverages Etsy SEO by putting 'Plant Mom Gift' and 'Housewarming Gift' as primary tags."
+          ],
+          shopUrl: "https://www.etsy.com/market/prism_pottery_3d"
+        },
+        {
+          shopName: "Flora3DDesign",
+          totalSales: "5,400+",
+          activeListingCount: 80,
+          nicheFocus: "Eco-Conscious Pastel Home Decor",
+          successTakeaways: [
+            "Prints planters with 100% recycled biodegradable PLA.",
+            "Offers detailed care guides and soil recommendations in the package.",
+            "Runs buy-2-get-1-free offers on micro succulent pots."
+          ],
+          shopUrl: "https://www.etsy.com/market/flora_3d_design"
+        }
+      ],
+      overallMarketInsight: "The planter niche is highly competitive but self-watering pots command a 30-40% price premium. Successful sellers stand out by offering water-level visibility indicators, robust sealing against slow leaks, and beautiful pastel or dual-color silks."
     }
   }
 ];

@@ -129,6 +129,34 @@ export interface CustomerSentiment {
   improvementSuggestions: { feature: string; priority: "High" | "Medium" | "Low"; designAction: string }[];
 }
 
+export interface EtsyLiveListing {
+  title: string;
+  shopName: string;
+  price: number;
+  rating: number;
+  salesVolume: string;
+  listingUrl: string;
+  imageUrl?: string;
+  successStrategy: string;
+  photographyStyle: string;
+  optimizedTags: string[];
+}
+
+export interface EtsyLiveShop {
+  shopName: string;
+  totalSales: string;
+  activeListingCount: number;
+  nicheFocus: string;
+  successTakeaways: string[];
+  shopUrl: string;
+}
+
+export interface EtsyLiveExamplesData {
+  listings: EtsyLiveListing[];
+  featuredShops: EtsyLiveShop[];
+  overallMarketInsight: string;
+}
+
 export interface Etsy3DProductAnalysis {
   id: string;
   name: string;
@@ -144,6 +172,7 @@ export interface Etsy3DProductAnalysis {
   marketDemandAnalysis: string;
   competitors: CompetitorListing[];
   customerSentiment?: CustomerSentiment;
+  etsyLiveExamples?: EtsyLiveExamplesData;
   printing: PrintingParameters;
   cadBrief: CADBrief;
   imagePrompts: ImagePromptPackage;

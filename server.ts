@@ -64,7 +64,7 @@ app.use(express.json());
 
 // API route to run product analysis using Gemini
 app.post("/api/analyze", async (req, res) => {
-  const { concept } = req.body;
+  const { concept, lang } = req.body;
 
   if (!concept || typeof concept !== "string" || concept.trim() === "") {
     return res.status(400).json({ error: "Product concept is required." });
@@ -76,12 +76,14 @@ app.post("/api/analyze", async (req, res) => {
     // so the app remains fully functional and beautiful in preview!
     console.warn("GEMINI_API_KEY is not configured. Returning custom-designed simulation response.");
     
-    // Custom simulated response based on the concept
-    const simulatedResponse = generateSimulatedResponse(concept);
+    // Custom simulated response based on the concept and language selection
+    const simulatedResponse = generateSimulatedResponse(concept, lang);
     return res.json({
       data: simulatedResponse,
       simulated: true,
-      message: "This is a pre-designed, high-fidelity mock analysis. Set your GEMINI_API_KEY in Settings > Secrets to enable live AI research!"
+      message: lang === "TR" 
+        ? "Bu, özel olarak tasarlanmış, yüksek kaliteli bir simülasyon analizidir. Canlı yapay zeka araştırmasını etkinleştirmek için Settings > Secrets menüsünde GEMINI_API_KEY'inizi ayarlayın!"
+        : "This is a pre-designed, high-fidelity mock analysis. Set your GEMINI_API_KEY in Settings > Secrets to enable live AI research!"
     });
   }
 
@@ -95,8 +97,13 @@ app.post("/api/analyze", async (req, res) => {
       },
     });
 
+    let languageInstruction = "";
+    if (lang === "TR") {
+      languageInstruction = "\nIMPORTANT: All descriptive texts, explanations, titles, niches, strategies, recommended steps, bullet points, tags, warning texts, and hooks in the JSON output MUST be fully written in Turkish (Türkçe). Do not translate JSON keys, only the string values.";
+    }
+
     const prompt = `You are a world-class AI Product Research Agent specialized in Etsy, 3D Printing, Manufacturing, and consumer trends.
-Analyze the following custom 3D printing product concept: "${concept}".
+Analyze the following custom 3D printing product concept: "${concept}".${languageInstruction}
 You must output a highly detailed, data-driven, and validated product analysis following all 13 phases. 
 Never be lazy; provide exact numbers, realistic CAD dimensions (e.g. in millimeters), specific slicing profiles, realistic Etsy competitor names and weaknesses, copyable tags, specific n8n/Zapier workflows, and legal trademark warnings.
 
@@ -272,6 +279,32 @@ Follow this JSON schema EXACTLY:
         "designAction": "string actionable design correction/improvement"
       }
     ]
+  },
+  "etsyLiveExamples": {
+    "listings": [
+      {
+        "title": "string highly detailed listing title targeting SEO",
+        "shopName": "string realistic or real active Etsy shop name",
+        "price": number listing price,
+        "rating": number average rating (1-5),
+        "salesVolume": "string e.g. 1,500+ sales or Bestseller",
+        "listingUrl": "string search or product link",
+        "successStrategy": "string key strategy that makes this listing successful",
+        "photographyStyle": "string staging, lighting, and style description of listing image",
+        "optimizedTags": ["string optimized tag (up to 6)"]
+      }
+    ],
+    "featuredShops": [
+      {
+        "shopName": "string shop name",
+        "totalSales": "string total sales count",
+        "activeListingCount": number active listings count,
+        "nicheFocus": "string primary focus of this store",
+        "successTakeaways": ["string key business lesson or takeaway (up to 3)"],
+        "shopUrl": "string realistic store URL"
+      }
+    ],
+    "overallMarketInsight": "string key synthesis of why certain sellers dominate this category and how a new 3D designer can easily compete"
   }
 }`;
 
@@ -479,18 +512,20 @@ Follow this JSON schema EXACTLY:
     console.error("Gemini API error:", error);
     
     // Smooth fallback so a standard user query still works if they have a bad key or network issue!
-    const simulatedResponse = generateSimulatedResponse(concept);
+    const simulatedResponse = generateSimulatedResponse(concept, lang);
     return res.json({
       data: simulatedResponse,
       simulated: true,
       error: error.message || "An error occurred with the Gemini API.",
-      message: "An API error occurred, so we've generated a premium fallback analysis for your product concept."
+      message: lang === "TR"
+        ? "Yapay zeka servisinde bir sorun oluştu, bu nedenle ürün fikriniz için premium bir yedek analiz oluşturduk."
+        : "An API error occurred, so we've generated a premium fallback analysis for your product concept."
     });
   }
 });
 
 // Helper to generate simulated data when API key is missing or errors
-function generateSimulatedResponse(concept: string): any {
+function generateSimulatedResponse(concept: string, lang: string = "EN"): any {
   const cleanConcept = concept.trim();
   const slug = cleanConcept.toLowerCase().replace(/[^a-z0-9]+/g, "-");
   
@@ -716,23 +751,138 @@ function generateSimulatedResponse(concept: string): any {
         { feature: "Precision Slide Tolerances", priority: "Medium", designAction: "Tune joint tolerances to exactly 0.20mm to allow a reliable snap-fit without any manual sanding." },
         { feature: "Matte/Textured Bio-Plastic", priority: "Low", designAction: "Advertise matte PLA and use textured PEI print sheets to achieve a clean, professional, high-end look." }
       ]
+    },
+    etsyLiveExamples: {
+      listings: [
+        {
+          title: `Premium Handcrafted 3D Printed ${cleanConcept} - Aesthetic Organizer`,
+          shopName: "Aura3DStudio",
+          price: 29.99,
+          rating: 4.8,
+          salesVolume: "350+ sales",
+          listingUrl: `https://www.etsy.com/search?q=${encodeURIComponent(cleanConcept)}`,
+          successStrategy: "Focuses on customized base engraving options and aesthetic modern colors like terracotta and sage green.",
+          photographyStyle: "Styled desk setup with warm plant bokeh, high-end accessories, clear highlight on texture.",
+          optimizedTags: [`3d printed ${cleanConcept.toLowerCase()}`, "custom gift", "desk organizer", "aesthetic home", "minimalist decor", "personalized setup"]
+        },
+        {
+          title: `Eco-Friendly ${cleanConcept} - Minimalist Functional Design`,
+          shopName: "EarthyForge",
+          price: 24.50,
+          rating: 4.9,
+          salesVolume: "180+ sales",
+          listingUrl: `https://www.etsy.com/search?q=${encodeURIComponent(cleanConcept)}`,
+          successStrategy: "Promotes biodegradeable plant-based PLA construction and includes a free gift wrap.",
+          photographyStyle: "Scandinavian style bright indoor portrait, natural shadows, featuring lifestyle potting/usage.",
+          optimizedTags: ["eco friendly", "home accents", "creative gift", "boho style", "functional design", "made to order"]
+        }
+      ],
+      featuredShops: [
+        {
+          shopName: "Aura3DStudio",
+          totalSales: "4,800+",
+          activeListingCount: 52,
+          nicheFocus: "Cozy Aesthetic Organizers & Displays",
+          successTakeaways: [
+            "Leverages TikTok trends by showing the 3D printer running in timelapse with ASMR printing sounds.",
+            "Charges a 25% premium for dual-extruder silk metallic colorways.",
+            "Includes custom hand-signed thank you notes in every box."
+          ],
+          shopUrl: "https://www.etsy.com/market/aura_3d_studio"
+        },
+        {
+          shopName: "EarthyForge",
+          totalSales: "1,900+",
+          activeListingCount: 34,
+          nicheFocus: "Eco-Conscious Plant-Based Home Accents",
+          successTakeaways: [
+            "Markets heavily on Pinterest using styled aesthetic graphic cards detailing material sustainability.",
+            "Offers free shipping on orders above $35, encouraging bundles with smaller accessories.",
+            "Tires joints precisely to avoid needing any glue or hardware."
+          ],
+          shopUrl: "https://www.etsy.com/market/earthy_forge"
+        }
+      ],
+      overallMarketInsight: `Sellers of '${cleanConcept}' succeed by branding their products as premium home accessories or gamer/productivity gear rather than '3D prints'. Avoid generic packaging and make sure to include high-quality styled lifestyle photos.`
     }
   };
 }
 
-// API route to scan and discover niches dynamically using Gemini
-app.post("/api/scan-niches", async (req, res) => {
-  const { category } = req.body;
-  const targetCategory = category || "General 3D Printing";
+// Helper to generate simulated Etsy examples
+function generateSimulatedEtsyExamples(keyword: string, lang: string = "EN"): any {
+  const cleanKeyword = keyword.trim();
+  const slug = encodeURIComponent(cleanKeyword);
+  return {
+    listings: [
+      {
+        title: `Premium 3D Printed ${cleanKeyword} - Customizable Desk & Home Decor`,
+        shopName: "CraftForge3D",
+        price: 24.99,
+        rating: 4.8,
+        salesVolume: "850+ sales",
+        listingUrl: `https://www.etsy.com/search?q=${slug}`,
+        successStrategy: "Offers personalized base text and wide range of color selections including silk bronze and matte marble.",
+        photographyStyle: "Clean, natural daylight shot on a solid oak table, potted plant bokeh in the background.",
+        optimizedTags: [cleanKeyword.toLowerCase().slice(0, 15), "3d printed gift", "room aesthetics", "personalized desk", "home organizer", "maker space"]
+      },
+      {
+        title: `Eco-Friendly Minimalist ${cleanKeyword} (Special Edition)`,
+        shopName: "GreenLinePrints",
+        price: 19.99,
+        rating: 4.7,
+        salesVolume: "420+ sales",
+        listingUrl: `https://www.etsy.com/search?q=${slug}`,
+        successStrategy: "Promoted as 100% biodegradable corn-plastic, packaged in plastic-free cardboard wrap.",
+        photographyStyle: "Minimalist Scandinavian styling, overhead studio portrait with soft white shadows.",
+        optimizedTags: ["sustainable plan", "eco friendly", "gift for him", "office decor", "artisan print", "modern crafts"]
+      }
+    ],
+    featuredShops: [
+      {
+        shopName: "CraftForge3D",
+        totalSales: "8,900+",
+        activeListingCount: 78,
+        nicheFocus: "Custom Tech Accessories & Desk Displays",
+        successTakeaways: [
+          "Uses active, high-tempo TikTok videos of the 3D printing process to drive traffic directly to listings.",
+          "Bundles multi-color variants together for a 20% order size increase.",
+          "Maintains custom packaging that mirrors high-end consumer retail branding."
+        ],
+        shopUrl: "https://www.etsy.com/market/craft_forge_3d"
+      },
+      {
+        shopName: "GreenLinePrints",
+        totalSales: "3,100+",
+        activeListingCount: 45,
+        nicheFocus: "Eco-Conscious Recycled Home Accents",
+        successTakeaways: [
+          "Targets eco-conscious shoppers with transparent climate-impact badges on listing images.",
+          "Maintains ultra-fast 24-hour dispatch on orders by keeping pre-printed standard stock ready.",
+          "Ships each item with seeds that buyers can grow directly in their biodegradable planters."
+        ],
+        shopUrl: "https://www.etsy.com/market/green_line_prints"
+      }
+    ],
+    overallMarketInsight: `Sellers of '${cleanKeyword}' stand out by offering a unique color palette, quick shipping options, and professional, high-end photography. By solving common buyer complaints like light weight or brittle joints, new shops can carve out a lucrative premium segment.`
+  };
+}
+
+// API route to research Etsy store examples using Google Search Grounding with Gemini
+app.post("/api/etsy-examples", async (req, res) => {
+  const { keyword, lang } = req.body;
+  if (!keyword || typeof keyword !== "string" || keyword.trim() === "") {
+    return res.status(400).json({ error: "Keyword or niche name is required." });
+  }
 
   const apiKey = process.env.GEMINI_API_KEY;
   if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "") {
-    // Return custom-designed simulated niche options based on the category
-    const simulatedNiches = generateSimulatedNiches(targetCategory);
+    console.log("No GEMINI_API_KEY. Returning custom-crafted live examples simulation.");
     return res.json({
-      data: simulatedNiches,
+      data: generateSimulatedEtsyExamples(keyword, lang),
       simulated: true,
-      message: "This is a simulated market scan. Set your GEMINI_API_KEY in Secrets to trigger a live AI trend scan!"
+      message: lang === "TR"
+        ? "Bu, özel olarak tasarlanmış bir pazar araştırması simülasyonudur. Gerçek canlı örnekleri çekmek için sırlarınıza GEMINI_API_KEY ekleyin!"
+        : "This is a custom-designed market research simulation. Add your GEMINI_API_KEY to secrets to fetch real live examples!"
     });
   }
 
@@ -746,21 +896,117 @@ app.post("/api/scan-niches", async (req, res) => {
       },
     });
 
-    const prompt = `You are a world-class 3D printing market research agent and trend strategist for Etsy.
+    let languageInstruction = "";
+    if (lang === "TR") {
+      languageInstruction = "\nIMPORTANT: All string descriptions, strategies, photography styles, takeaways, and market insights in the JSON output MUST be written in Turkish language (Türkçe). Do not translate JSON keys.";
+    }
+
+    const searchPrompt = `Search Google for active listings on Etsy.com matching the keyword/niche: "${keyword}".${languageInstruction}
+Focus on 3D printed or physical craft items.
+Identify at least 2 actual, live Etsy listings (with actual or highly realistic shop names, listing titles, estimated price, average rating, and active sales volume) and at least 2 featured Etsy shops currently selling in this niche.
+
+You must output a single JSON object matching this schema exactly. Do not wrap it in markdown block. Return raw JSON text only:
+{
+  "listings": [
+    {
+      "title": "exact or highly realistic title of the listing found",
+      "shopName": "name of the Etsy shop",
+      "price": number (listing price),
+      "rating": number (e.g. 4.8),
+      "salesVolume": "string (e.g. '1,500+ sales' or 'Bestseller')",
+      "listingUrl": "actual or realistic search or listing URL on Etsy",
+      "successStrategy": "how this listing wins (e.g. dual-color option, bundled files)",
+      "photographyStyle": "how they style their photos (e.g. warm desk setup, natural sunlight)",
+      "optimizedTags": ["tag1", "tag2", "tag3"]
+    }
+  ],
+  "featuredShops": [
+    {
+      "shopName": "Etsy shop name",
+      "totalSales": "total sales count (e.g. '12,400+')",
+      "activeListingCount": number (total listings),
+      "nicheFocus": "what they focus on",
+      "successTakeaways": ["takeaway 1", "takeaway 2"],
+      "shopUrl": "shop home URL"
+    }
+  ],
+  "overallMarketInsight": "Detailed synthesis of why these top shops succeed in the '${keyword}' category, what tags work best, and what to watch out for."
+}`;
+
+    const response = await ai.models.generateContent({
+      model: "gemini-3.5-flash",
+      contents: searchPrompt,
+      config: {
+        responseMimeType: "application/json",
+        tools: [{ googleSearch: {} }]
+      }
+    });
+
+    const rawText = (response.text || "{}").trim();
+    const parsed = JSON.parse(rawText);
+    return res.json({ data: parsed, simulated: false });
+  } catch (error: any) {
+    console.error("Etsy search grounding failed:", error);
+    return res.json({
+      data: generateSimulatedEtsyExamples(keyword, lang),
+      simulated: true,
+      error: error.message || "Etsy live research failed.",
+      message: lang === "TR"
+        ? "Canlı arama sırasında bir sorun oluştu, bu nedenle özel tasarım simülasyon örnekleri döndürüldü."
+        : "Live search encountered an issue, so we've returned custom-crafted simulation examples."
+    });
+  }
+});
+
+// API route to scan and discover niches dynamically using Gemini
+app.post("/api/scan-niches", async (req, res) => {
+  const { category, lang } = req.body;
+  const targetCategory = category || "General 3D Printing";
+
+  const apiKey = process.env.GEMINI_API_KEY;
+  if (!apiKey || apiKey === "MY_GEMINI_API_KEY" || apiKey === "") {
+    // Return custom-designed simulated niche options based on the category
+    const simulatedNiches = generateSimulatedNiches(targetCategory, lang);
+    return res.json({
+      data: simulatedNiches,
+      simulated: true,
+      message: lang === "TR"
+        ? "Bu simüle edilmiş bir pazar taramasıdır. Canlı bir yapay zeka trend taraması başlatmak için Sırlarınızı (Secrets) ayarlayın!"
+        : "This is a simulated market scan. Set your GEMINI_API_KEY in Secrets to trigger a live AI trend scan!"
+    });
+  }
+
+  try {
+    const ai = new GoogleGenAI({
+      apiKey: apiKey,
+      httpOptions: {
+        headers: {
+          "User-Agent": "aistudio-build",
+        },
+      },
+    });
+
+    let languageInstruction = "";
+    if (lang === "TR") {
+      languageInstruction = "\nIMPORTANT: All descriptive texts, explanations, titles, niches, strategies, and tags in the returned JSON object array MUST be written in Turkish language (Türkçe). Do not translate JSON keys.";
+    }
+
+    const prompt = `You are a world-class 3D printing market research agent and trend strategist for Etsy.${languageInstruction}
 Scan the Etsy marketplace for high-growth, low-competition, and highly profitable 3D printing product niches inside the category: "${targetCategory}".
 Identify 3 brand-new, highly specific product concepts that meet these guidelines:
 - Highly specific (e.g. "Mechanical Kinetic Ring Box" or "Modular Pegboard Paint Rack", not just "Box" or "Rack")
 - High Etsy buyer demand and growing search queries
 - Optimally designed for 3D printing (under 300g filament, minimal supports, fast print time)
 - Command high margins ($20-$45 recommended price)
+- CRITICAL: Keep all text values extremely brief, punchy, and under 100 characters.
 
 Return a JSON array containing exactly 3 distinct concepts matching this schema:
 [
   {
-    "id": "string (unique-url-slug)",
-    "name": "string (Creative, descriptive product title)",
-    "niche": "string (Etsy sub-niche)",
-    "description": "string (Short compelling description of why it sells)",
+    "id": "string (unique-url-slug, e.g. mechanical-ring-box)",
+    "name": "string (Short product title, max 40 characters)",
+    "niche": "string (Etsy sub-niche, max 30 characters)",
+    "description": "string (Single concise sentence, max 100 characters)",
     "monthlyRevenuePotential": number (e.g. between 1500 and 4500),
     "timeToFirstSaleDays": number (e.g. between 2 and 7),
     "probabilityOfSuccessPercent": number (between 65 and 95),
@@ -786,16 +1032,16 @@ Return a JSON array containing exactly 3 distinct concepts matching this schema:
           items: {
             type: Type.OBJECT,
             properties: {
-              id: { type: Type.STRING },
-              name: { type: Type.STRING },
-              niche: { type: Type.STRING },
-              description: { type: Type.STRING },
-              monthlyRevenuePotential: { type: Type.NUMBER },
-              timeToFirstSaleDays: { type: Type.NUMBER },
-              probabilityOfSuccessPercent: { type: Type.NUMBER },
-              filamentWeightGrams: { type: Type.NUMBER },
-              printTimeHours: { type: Type.NUMBER },
-              difficultyLevel: { type: Type.STRING },
+              id: { type: Type.STRING, description: "Unique URL slug like 'magnetic-pen-oasis'." },
+              name: { type: Type.STRING, description: "Short creative title, max 40 characters." },
+              niche: { type: Type.STRING, description: "Etsy sub-niche name, max 30 characters." },
+              description: { type: Type.STRING, description: "Extremely brief single sentence description, max 100 characters." },
+              monthlyRevenuePotential: { type: Type.NUMBER, description: "Estimated monthly revenue, integer between 1000 and 5000." },
+              timeToFirstSaleDays: { type: Type.NUMBER, description: "Days to first sale, integer between 1 and 10." },
+              probabilityOfSuccessPercent: { type: Type.NUMBER, description: "Success probability percentage, integer between 50 and 99." },
+              filamentWeightGrams: { type: Type.NUMBER, description: "Filament weight in grams, integer between 40 and 300." },
+              printTimeHours: { type: Type.NUMBER, description: "Total print time in hours, float between 1.0 and 12.0." },
+              difficultyLevel: { type: Type.STRING, description: "Difficulty level: 'Easy', 'Medium', or 'Hard'." },
               scorecard: {
                 type: Type.OBJECT,
                 properties: {
@@ -817,18 +1063,20 @@ Return a JSON array containing exactly 3 distinct concepts matching this schema:
     return res.json({ data: parsedData, simulated: false });
   } catch (error: any) {
     console.error("Niche scanning error:", error);
-    const simulatedNiches = generateSimulatedNiches(targetCategory);
+    const simulatedNiches = generateSimulatedNiches(targetCategory, lang);
     return res.json({
       data: simulatedNiches,
       simulated: true,
       error: error.message || "Error during AI scan",
-      message: "An API error occurred, so we generated dynamic simulated niches."
+      message: lang === "TR"
+        ? "Yapay zeka taraması sırasında bir hata oluştu, bu nedenle dinamik simüle edilmiş nişler oluşturuldu."
+        : "An API error occurred, so we generated dynamic simulated niches."
     });
   }
 });
 
 // Helper to generate simulated niche options based on chosen category
-function generateSimulatedNiches(category: string): any[] {
+function generateSimulatedNiches(category: string, lang: string = "EN"): any[] {
   const cat = category.toLowerCase();
   if (cat.includes("desk") || cat.includes("workspace") || cat.includes("office") || cat.includes("organizer")) {
     return [
