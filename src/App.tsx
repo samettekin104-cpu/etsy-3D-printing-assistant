@@ -34,6 +34,11 @@ import {
 
 import { PREDEFINED_PRODUCTS } from "./mockData";
 import { Etsy3DProductAnalysis } from "./types";
+import {
+  generateSimulatedResponse,
+  generateSimulatedNiches,
+  generateSimulatedEtsyExamples
+} from "./fallbackGenerator";
 
 const TRANSLATIONS: Record<string, string> = {
   // Navigation & General
@@ -335,18 +340,28 @@ export default function App() {
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ category: selectedScanCategory, lang })
         });
-        const result = await response.json();
-        if (result && result.data) {
-          setScannedNiches(result.data);
-          if (result.simulated && result.message) {
-            setScannedNicheNotice(result.message);
+        if (response.ok) {
+          const result = await response.json();
+          if (result && result.data) {
+            setScannedNiches(result.data);
+            if (result.simulated && result.message) {
+              setScannedNicheNotice(result.message);
+            }
+          } else {
+            throw new Error("Invalid response format");
           }
         } else {
-          setScanNicheError("Unable to retrieve trend scanner data. Please try again.");
+          throw new Error(`Server returned ${response.status}`);
         }
       } catch (err) {
-        console.error("Niche scan failed:", err);
-        setScanNicheError("The connection to the AI engine was interrupted or the server is starting up. Please wait a few seconds and try again.");
+        console.warn("Niche scan backend failed, falling back to client-side simulation:", err);
+        const fallbackNiches = generateSimulatedNiches(selectedScanCategory, lang);
+        setScannedNiches(fallbackNiches);
+        setScannedNicheNotice(
+          lang === "TR"
+            ? "Not: Statik barındırma modundasınız. Gelişmiş niş analizi doğrudan tarayıcınızda simüle edildi."
+            : "Note: Running in static hosting mode. Premium niche analysis has been simulated directly in your browser."
+        );
       } finally {
         setIsScanNicheLoading(false);
       }
@@ -421,22 +436,41 @@ export default function App() {
         body: JSON.stringify({ concept, lang })
       });
 
-      const result = await response.json();
-      if (result && result.data) {
-        // Add analyzed product to list
-        const newProduct = result.data as Etsy3DProductAnalysis;
-        
-        // Guarantee completely unique ID in case of collisions or fallback slug issues
-        if (!newProduct.id || products.some(p => p.id === newProduct.id)) {
-          newProduct.id = `${newProduct.id || "product"}-${Date.now()}`;
-        }
+      if (response.ok) {
+        const result = await response.json();
+        if (result && result.data) {
+          const newProduct = result.data as Etsy3DProductAnalysis;
+          
+          if (!newProduct.id || products.some(p => p.id === newProduct.id)) {
+            newProduct.id = `${newProduct.id || "product"}-${Date.now()}`;
+          }
 
-        setProducts((prev) => [newProduct, ...prev]);
-        setSelectedProductId(newProduct.id);
-        setSearchConcept("");
+          setProducts((prev) => [newProduct, ...prev]);
+          setSelectedProductId(newProduct.id);
+          setSearchConcept("");
+        } else {
+          throw new Error("Invalid response format");
+        }
+      } else {
+        throw new Error(`Server returned ${response.status}`);
       }
     } catch (err) {
-      console.error("Scanning failed", err);
+      console.warn("Concept analysis backend failed, falling back to client-side simulation:", err);
+      const simulatedProduct = generateSimulatedResponse(concept, lang);
+      
+      simulatedProduct.marketDemandAnalysis = (
+        lang === "TR"
+          ? "⚠️ [Statik Çevrimdışı Mod] Sunucu bağlantısı algılanamadı, yerel yapay zeka simülatörü çalıştırıldı.\n\n"
+          : "⚠️ [Static Offline Mode] No backend server detected, running high-fidelity browser-side AI simulator.\n\n"
+      ) + simulatedProduct.marketDemandAnalysis;
+
+      if (!simulatedProduct.id || products.some(p => p.id === simulatedProduct.id)) {
+        simulatedProduct.id = `${simulatedProduct.id || "product"}-${Date.now()}`;
+      }
+
+      setProducts((prev) => [simulatedProduct, ...prev]);
+      setSelectedProductId(simulatedProduct.id);
+      setSearchConcept("");
     } finally {
       setIsScanning(false);
       setScanningPhase(0);
@@ -459,20 +493,30 @@ export default function App() {
         body: JSON.stringify({ keyword: etsySearchKeyword, lang })
       });
 
-      const result = await response.json();
-      if (response.ok && result && result.data) {
-        setEtsyResearchResult(result.data);
-        if (result.simulated) {
-          setEtsyResearchMessage(result.message || "Loaded simulation analysis.");
+      if (response.ok) {
+        const result = await response.json();
+        if (result && result.data) {
+          setEtsyResearchResult(result.data);
+          if (result.simulated) {
+            setEtsyResearchMessage(result.message || "Loaded simulation analysis.");
+          } else {
+            setEtsyResearchMessage("Live research synchronized successfully via Google Search Grounding!");
+          }
         } else {
-          setEtsyResearchMessage("Live research synchronized successfully via Google Search Grounding!");
+          throw new Error("Invalid response format");
         }
       } else {
-        throw new Error(result.error || "Etsy search failed.");
+        throw new Error(`Server returned ${response.status}`);
       }
     } catch (err: any) {
-      console.error("Etsy research failed:", err);
-      setEtsyResearchError(err.message || "Failed to query Etsy market. Please try again.");
+      console.warn("Etsy research failed, using client-side fallback:", err);
+      const simulatedData = generateSimulatedEtsyExamples(etsySearchKeyword, lang);
+      setEtsyResearchResult(simulatedData);
+      setEtsyResearchMessage(
+        lang === "TR"
+          ? "Not: Statik barındırma modundasınız. Pazar araştırması canlı örnekleri tarayıcınızda simüle edildi."
+          : "Note: Running in static hosting mode. Market research live examples have been simulated in your browser."
+      );
     } finally {
       setIsResearchingEtsy(false);
     }
