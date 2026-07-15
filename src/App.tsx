@@ -33,7 +33,10 @@ import {
 } from "lucide-react";
 
 import { PREDEFINED_PRODUCTS } from "./mockData";
-import { Etsy3DProductAnalysis } from "./types";
+import { Etsy3DProductAnalysis, SavedProduct } from "./types";
+import SavedPortfolio from "./components/SavedPortfolio";
+import PRELOADED_PORTFOLIO from "./portfolio.json";
+import { FolderHeart } from "lucide-react";
 import {
   generateSimulatedResponse,
   generateSimulatedNiches,
@@ -75,6 +78,10 @@ const TRANSLATIONS: Record<string, string> = {
   "discovering_niches": "Nişler Keşfediliyor...",
   "scan_success_not": "Canlı Etsy Trend Taraması Başarıyla Senkronize Edildi!",
   "scan_notice_sim": "Bu simüle edilmiş bir taramadır. Canlı yapay zeka analizi için GEMINI_API_KEY ayarlayın.",
+  "main_tab_research": "AI Araştırma Lab",
+  "main_tab_portfolio": "Kayıtlı Ürün Portföyü",
+  "save_to_portfolio": "Portföye Kaydet",
+  "saved_in_portfolio": "Portföye Kaydedildi",
 
   // Tabs
   "tab_scorecard": "Fırsat Karnesi",
@@ -147,6 +154,81 @@ export default function App() {
   const [isResearchingEtsy, setIsResearchingEtsy] = useState<boolean>(false);
   const [etsyResearchError, setEtsyResearchError] = useState<string | null>(null);
   const [etsyResearchMessage, setEtsyResearchMessage] = useState<string | null>(null);
+
+  // Main Tab Navigation state
+  const [mainTab, setMainTab] = useState<"research" | "portfolio">("research");
+
+  // Portfolio Database states
+  const [savedProducts, setSavedProducts] = useState<SavedProduct[]>(() => {
+    try {
+      const saved = localStorage.getItem("printforge_saved_portfolio");
+      if (saved) {
+        return JSON.parse(saved);
+      }
+    } catch (e) {
+      console.error("Failed to parse saved portfolio", e);
+    }
+    return Array.isArray(PRELOADED_PORTFOLIO) ? (PRELOADED_PORTFOLIO as SavedProduct[]) : [];
+  });
+
+  const savePortfolioToStorage = (updatedList: SavedProduct[]) => {
+    setSavedProducts(updatedList);
+    localStorage.setItem("printforge_saved_portfolio", JSON.stringify(updatedList));
+  };
+
+  const handleAddToPortfolio = (product: Etsy3DProductAnalysis) => {
+    if (savedProducts.some((p) => p.id === product.id)) return;
+    
+    const newSaved: SavedProduct = {
+      id: product.id,
+      analysis: product,
+      savedAt: new Date().toISOString(),
+      customProductCost: undefined,
+      customShippingCost: undefined,
+      customPackagingCost: undefined,
+      customLaborCost: undefined,
+      customRetailPrice: undefined,
+      customNotes: ""
+    };
+
+    const updated = [newSaved, ...savedProducts];
+    savePortfolioToStorage(updated);
+  };
+
+  const handleRemoveFromPortfolio = (id: string) => {
+    const updated = savedProducts.filter((p) => p.id !== id);
+    savePortfolioToStorage(updated);
+  };
+
+  const handleUpdateSavedProduct = (id: string, updatedFields: Partial<SavedProduct>) => {
+    const updated = savedProducts.map((p) => {
+      if (p.id === id) {
+        return { ...p, ...updatedFields };
+      }
+      return p;
+    });
+    savePortfolioToStorage(updated);
+  };
+
+  const handleImportPortfolio = (importedList: SavedProduct[]) => {
+    savePortfolioToStorage(importedList);
+  };
+
+  const isProductSaved = (id: string): boolean => {
+    return savedProducts.some((p) => p.id === id);
+  };
+
+  const handleSelectAndAnalyze = (product: Etsy3DProductAnalysis) => {
+    if (!products.some((p) => p.id === product.id)) {
+      setProducts((prev) => [product, ...prev]);
+    }
+    setSelectedProductId(product.id);
+    setMainTab("research");
+    setActiveTab("scorecard");
+    setTimeout(() => {
+      document.getElementById("analysis-workbench")?.scrollIntoView({ behavior: "smooth" });
+    }, 100);
+  };
 
   // Active product model
   const rawSelectedProduct = products.find((p) => p.id === selectedProductId) || products[0];
@@ -679,8 +761,43 @@ export default function App() {
           </div>
         </header>
 
-        {/* Search & Scan Product Console */}
-        <section className="bg-[#15171C] border border-white/10 rounded-2xl p-5 md:p-6 shadow-xl relative overflow-hidden" id="concept-scanner">
+        {/* Main Application Tabs */}
+        <div className="flex border-b border-white/10" id="main-application-tabs">
+          <button
+            type="button"
+            onClick={() => setMainTab("research")}
+            className={`px-5 py-3 font-display text-xs md:text-sm font-bold tracking-wide transition-all border-b-2 cursor-pointer flex items-center gap-2 ${
+              mainTab === "research"
+                ? "border-blue-500 text-white"
+                : "border-transparent text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <Cpu className="w-4 h-4 text-blue-500" />
+            <span>{t("main_tab_research", "AI Research Lab")}</span>
+          </button>
+          <button
+            type="button"
+            onClick={() => setMainTab("portfolio")}
+            className={`px-5 py-3 font-display text-xs md:text-sm font-bold tracking-wide transition-all border-b-2 cursor-pointer flex items-center gap-2 relative ${
+              mainTab === "portfolio"
+                ? "border-blue-500 text-white"
+                : "border-transparent text-slate-400 hover:text-slate-200"
+            }`}
+          >
+            <FolderHeart className="w-4 h-4 text-pink-500" />
+            <span>{t("main_tab_portfolio", "Saved Portfolio Database")}</span>
+            {savedProducts.length > 0 && (
+              <span className="bg-blue-600 text-[9px] text-white px-2 py-0.5 rounded-full font-mono font-bold">
+                {savedProducts.length}
+              </span>
+            )}
+          </button>
+        </div>
+
+        {mainTab === "research" ? (
+          <>
+            {/* Search & Scan Product Console */}
+            <section className="bg-[#15171C] border border-white/10 rounded-2xl p-5 md:p-6 shadow-xl relative overflow-hidden" id="concept-scanner">
           <div className="absolute top-0 right-0 w-64 h-64 bg-blue-500/5 blur-3xl rounded-full pointer-events-none"></div>
           
           <div className="max-w-3xl">
@@ -1017,6 +1134,34 @@ export default function App() {
                 <span className="text-xs font-mono text-blue-500 font-semibold tracking-wider block">{t("current_scan", "CURRENT ACTIVE SCAN")}</span>
                 <h2 className="text-2xl font-display font-bold text-white mt-1">{selectedProduct.name}</h2>
                 <p className="text-xs text-slate-400 mt-1 max-w-xl">{selectedProduct.description}</p>
+                
+                {/* Save to Portfolio Action */}
+                <div className="mt-4 flex items-center gap-2">
+                  {isProductSaved(selectedProduct.id) ? (
+                    <div className="flex items-center gap-3">
+                      <span className="text-xs font-mono font-bold text-emerald-400 bg-emerald-500/10 border border-emerald-500/20 px-3 py-1.5 rounded-xl flex items-center gap-1">
+                        <CheckCircle className="w-3.5 h-3.5 text-emerald-400" />
+                        <span>{t("saved_in_portfolio", "Portföye Kaydedildi")}</span>
+                      </span>
+                      <button
+                        type="button"
+                        onClick={() => handleRemoveFromPortfolio(selectedProduct.id)}
+                        className="text-xs font-mono text-red-400 hover:text-red-300 underline cursor-pointer"
+                      >
+                        {t("Remove", "Kaldır")}
+                      </button>
+                    </div>
+                  ) : (
+                    <button
+                      type="button"
+                      onClick={() => handleAddToPortfolio(selectedProduct)}
+                      className="px-4 py-1.5 bg-blue-600 hover:bg-blue-700 text-white font-mono text-xs font-bold uppercase tracking-wider rounded-xl flex items-center gap-1.5 transition-all cursor-pointer shadow-md shadow-blue-500/10"
+                    >
+                      <Plus className="w-3.5 h-3.5" />
+                      <span>{t("save_to_portfolio", "Portföye Kaydet")}</span>
+                    </button>
+                  )}
+                </div>
               </div>
 
               {/* High-level Success KPIs */}
@@ -2960,6 +3105,17 @@ export default function App() {
           </main>
 
         </div>
+        </>
+        ) : (
+          <SavedPortfolio
+            lang={lang}
+            savedProducts={savedProducts}
+            onUpdateSavedProduct={handleUpdateSavedProduct}
+            onRemoveFromPortfolio={handleRemoveFromPortfolio}
+            onSelectAndAnalyze={handleSelectAndAnalyze}
+            onImportPortfolio={handleImportPortfolio}
+          />
+        )}
 
       </div>
 

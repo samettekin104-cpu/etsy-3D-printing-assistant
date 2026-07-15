@@ -182,3 +182,16 @@ export interface Etsy3DProductAnalysis {
   automations: AutomationRecipes;
   legal: LegalRiskCheck;
 }
+
+export interface SavedProduct {
+  id: string;
+  analysis: Etsy3DProductAnalysis;
+  savedAt: string;
+  customProductCost?: number;
+  customShippingCost?: number;
+  customPackagingCost?: number;
+  customLaborCost?: number;
+  customRetailPrice?: number;
+  customNotes?: string;
+}
+
